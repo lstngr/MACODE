@@ -1,3 +1,5 @@
+% TODO - Could implement domain scaling
+
 classdef mConf < matlab.mixin.SetGet
     
     properties
@@ -39,7 +41,7 @@ classdef mConf < matlab.mixin.SetGet
         function p = fluxFx(obj,x,y)
             p = zeros(size(x));
             for cur=obj.currents
-                p = p + cur.FluxFx(x,y,obj.R);
+                p = p + cur.fluxFx(x,y,obj.R);
             end
         end
         
