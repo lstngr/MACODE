@@ -11,10 +11,11 @@ function NegTriSetup
 script_path     = mfilename('fullpath');	% Get full setup path
 [script_path,~] = fileparts(script_path);	% Strip the script name
 addpath( script_path,...                    % Add folders to path
-    genpath([script_path,filesep,'src']) )
+    genpath([script_path,filesep,'src']),...
+    genpath([script_path,filesep,'examples']))
 
 %% Generate M2HTML documentation for everybody!
 m2html('mfiles','src','ignoredDir','m2html',...
     'htmldir','docs', 'recursive','on', 'global','on',...
-    'graph','on','globalHypertextLinks','on');
+    'graph','on','globalHypertextLinks','on','verbose','off');
 end

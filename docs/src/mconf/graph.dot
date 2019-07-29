@@ -1,0 +1,11 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  current -> current;
+  currentWire -> current;
+  currentWire -> currentWire;
+  mConf -> mConf;
+
+  current [URL="current.html"];
+  currentWire [URL="currentWire.html"];
+  mConf [URL="mConf.html"];
+}

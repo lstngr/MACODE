@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of current</title>
+  <meta name="keywords" content="current">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="#">src</a> &gt; <a href="index.html">mconf</a> &gt; current.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for src/mconf&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>current
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="current.html" class="code" title="">current</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="current.html" class="code" title="">current</a>	</li><li><a href="currentWire.html" class="code" title="">currentWire</a>	</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function obj = current(x,y,c,varargin)</a></li><li><a href="#_sub2" class="code">function set.x(obj,x)</a></li><li><a href="#_sub3" class="code">function set.y(obj,y)</a></li><li><a href="#_sub4" class="code">function set.c(obj,c)</a></li><li><a href="#_sub5" class="code">function set.curr(obj,c)</a></li><li><a href="#_sub6" class="code">function curr = get.curr(obj)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 classdef <a href="current.html" class="code" title="">current</a> &lt; handle &amp; matlab.mixin.Heterogeneous
+0002     
+0003     properties(GetAccess=public,SetAccess=public)
+0004         x = 0;
+0005         y = 0;
+0006         Parent = [];
+0007         Children = [];
+0008     <span class="keyword">end</span>
+0009     
+0010     properties(Dependent)
+0011         curr
+0012     <span class="keyword">end</span>
+0013     
+0014     properties(Access=private)
+0015         c = 1;
+0016     <span class="keyword">end</span>
+0017     
+0018     methods
+0019         <a name="_sub0" href="#_subfunctions" class="code">function obj = current(x,y,c,varargin)</a>
+0020             narginchk(3,4);
+0021             obj.x = x;
+0022             obj.y = y;
+0023             obj.c = c;
+0024             <span class="keyword">if</span> nargin==4
+0025                 relCur = varargin{1};
+0026                 assert(~isempty(relCur) &amp;&amp; isa(relCur,<span class="string">'current'</span>));
+0027                 obj.Parent = relCur;
+0028                 <span class="keyword">if</span> isempty(obj.Children)
+0029                     obj.Parent.Children = obj;
+0030                 <span class="keyword">else</span>
+0031                     obj.Parent.Children(end+1) = obj;
+0032                 <span class="keyword">end</span>
+0033             <span class="keyword">end</span>
+0034         <span class="keyword">end</span>
+0035         
+0036         <a name="_sub1" href="#_subfunctions" class="code">function set.x(obj,x)</a>
+0037             obj.x = x;
+0038         <span class="keyword">end</span>
+0039         
+0040         <a name="_sub2" href="#_subfunctions" class="code">function set.y(obj,y)</a>
+0041             obj.y = y;
+0042         <span class="keyword">end</span>
+0043         
+0044         <a name="_sub3" href="#_subfunctions" class="code">function set.c(obj,c)</a>
+0045             obj.c = c;
+0046         <span class="keyword">end</span>
+0047         
+0048         <a name="_sub4" href="#_subfunctions" class="code">function set.curr(obj,c)</a>
+0049             obj.c = c;
+0050             <span class="keyword">if</span> ~isempty(obj.Parent)
+0051                 obj.c = obj.c * obj.Parent.c;
+0052             <span class="keyword">end</span>
+0053         <span class="keyword">end</span>
+0054         
+0055         <a name="_sub5" href="#_subfunctions" class="code">function curr = get.curr(obj)</a>
+0056             curr = obj.c;
+0057             <span class="keyword">if</span> ~isempty(obj.Parent)
+0058                 curr = curr * obj.Parent.c;
+0059             <span class="keyword">end</span>
+0060         <span class="keyword">end</span>
+0061         
+0062     <span class="keyword">end</span>
+0063     
+0064     methods (Abstract)
+0065         bx = magFieldX(obj,x,y);
+0066         by = magFieldY(obj,x,y);
+0067     <span class="keyword">end</span>
+0068 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 29-Jul-2019 14:34:31 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
