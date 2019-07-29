@@ -22,7 +22,7 @@ divertor = currentWire(0,-10,0.5,plasma);
 bx = @(x,y) plasma.magFieldX(x,y) + divertor.magFieldX(x,y);
 by = @(x,y) plasma.magFieldY(x,y) + divertor.magFieldY(x,y);
 b  = @(x,y) hypot(bx(x,y),by(x,y));
-flx= @(x,y,r) plasma.FluxFx(x,y,r) + divertor.FluxFx(x,y,r);
+flx= @(x,y,r) plasma.fluxFx(x,y,r) + divertor.fluxFx(x,y,r);
 
 %% Plots the configuration
 % Use a lighter grid for convenience

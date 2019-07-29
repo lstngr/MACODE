@@ -10,7 +10,8 @@ classdef currentGaussian < current
             obj@current(x,y,c,varargin{:});
             obj.sigma = s;
         end
-        
+    end
+    methods(Access=public)
         function bx = magFieldX(obj,x,y)
             assert(isequal(size(x),size(y)));
             dx = x - obj.x;
@@ -28,7 +29,7 @@ classdef currentGaussian < current
             by = obj.curr * (-dx./d2) .* (1 - exp( -0.5*d2./obj.sigma^2 ));
         end
         
-        function flx = FluxFx(obj,x,y,R)
+        function flx = fluxFx(obj,x,y,R)
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;

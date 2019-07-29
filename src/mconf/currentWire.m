@@ -4,7 +4,9 @@ classdef currentWire < current
         function obj=currentWire(x,y,c,varargin)
             obj@current(x,y,c,varargin{:});
         end
-        
+    end
+    
+    methods(Access=public)
         function bx = magFieldX(obj,x,y)
             assert(isequal(size(x),size(y)));
             dx = x - obj.x;
@@ -22,7 +24,7 @@ classdef currentWire < current
             by = obj.curr * (-dx./d2);
         end
         
-        function flx = FluxFx(obj,x,y,R)
+        function flx = fluxFx(obj,x,y,R)
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;

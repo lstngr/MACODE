@@ -97,10 +97,10 @@ classdef current < handle & matlab.mixin.Heterogeneous
         end
     end
     
-    methods (Abstract)
+    methods(Abstract,Access=public)
         bx = magFieldX(obj,x,y);
         by = magFieldY(obj,x,y);
-        flx = FluxFx(obj,x,y,R);
+        flx = fluxFx(obj,x,y,R);
     end
     
     methods (Static, Sealed, Access = protected)
