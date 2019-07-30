@@ -45,27 +45,26 @@ classdef mConf < matlab.mixin.SetGet & handle
                     return;
                 end
             end
-            
-            % If reaching this statement, need to
-            % - compute x-points
-            % - evaluate psi at these locations
-            
-            % X-point detection
+            obj.xPointDetec
+            % Psi Separatrix
+            obj.separatrixPsi = obj.fluxFx(obj.xpoints(1),...
+                obj.xpoints(2));
+            % Remember last commit's magnetic structure
+            obj.old_bx  = symBx;
+            obj.old_by  = symBy;
+        end
+        
+        function xPointDetec(obj,varargin)
+            syms x y
+            symBx = obj.symMagFieldX;
+            symBy = obj.symMagFieldY;
             xmin = min( [obj.currents(:).x] );
             xmax = max( [obj.currents(:).x] );
             ymin = min( [obj.currents(:).y] );
             ymax = max( [obj.currents(:).y] );
-            
             pts = vpasolve( [symBx==0,symBy==0], [x,y], [xmin,xmax;ymin,ymax],...
                 'random',true);
             obj.xpoints = double(horzcat(pts.x,pts.y));
-            
-            % Psi Separatrix
-            obj.separatrixPsi = obj.fluxFx(obj.xpoints(1),...
-                obj.xpoints(2));
-            
-            obj.old_bx  = symBx;
-            obj.old_by  = symBy;
         end
         
         function bx = magFieldX(obj,x,y)
