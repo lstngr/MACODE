@@ -45,7 +45,7 @@ classdef mConf < matlab.mixin.SetGet & handle
                     return;
                 end
             end
-            obj.xPointDetec
+            obj.xPointDetec(varargin{:});
             % Psi Separatrix
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(1),...
                 obj.xpoints(2));
@@ -55,6 +55,19 @@ classdef mConf < matlab.mixin.SetGet & handle
         end
         
         function xPointDetec(obj,varargin)
+            % Detect x points
+            
+            % Call signature
+            %   xPointDetec, xpoints detected within the coils only
+            %   xPointDetec(nxpt), returns at most nxpt (found within 10
+            %   trials)
+            %   xPointDetec(nxpt,ntrials), returns at most nxpt (found
+            %   within ntrials trials)
+            %   xPointDetec(guesses), finds x-points with initial guesses
+            %   xPointDetec(...,'Limits',lims), 2x2 matrix with limits to
+            %   consider.
+            % In all cases, returned x-points are unique, and found via
+            % vpasolve using randomized behavior.
             syms x y
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
