@@ -1,4 +1,6 @@
-classdef current < handle & matlab.mixin.Heterogeneous
+% TODO - Add setters control of input
+
+classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     
     properties(GetAccess=public,SetAccess=private)
         x = 0;
@@ -7,7 +9,11 @@ classdef current < handle & matlab.mixin.Heterogeneous
         Children = currentWire.empty();
     end
     
-    properties(Dependent)
+    properties(Access=public)
+        plasma = false;
+    end
+    
+    properties(Dependent,Access=public)
         curr
     end
     
@@ -38,7 +44,7 @@ classdef current < handle & matlab.mixin.Heterogeneous
             % current computation
             for child=obj.Children
                 childCurr = child.curr;
-                child.Parent = [];
+                child.Parent = currentWire.empty();
                 child.curr = childCurr;
             end
             % Delete the object handle in the parent's reference
@@ -50,16 +56,16 @@ classdef current < handle & matlab.mixin.Heterogeneous
             end
         end
         
-        function varargout = eq(A,B)
-            varargout{1:nargout} = eq@handle(A,B);
-        end
-        
         function set.x(obj,x)
             obj.x = x;
         end
         
         function set.y(obj,y)
             obj.y = y;
+        end
+        
+        function set.plasma(obj,p)
+            obj.plasma = p;
         end
         
         function set.c(obj,c)
@@ -101,6 +107,12 @@ classdef current < handle & matlab.mixin.Heterogeneous
         bx = magFieldX(obj,x,y);
         by = magFieldY(obj,x,y);
         flx = fluxFx(obj,x,y,R);
+    end
+    
+    methods(Sealed)
+        function varargout = eq(A,B)
+            varargout{1:nargout} = eq@handle(A,B);
+        end
     end
     
     methods (Static, Sealed, Access = protected)

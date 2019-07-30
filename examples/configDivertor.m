@@ -14,6 +14,7 @@ divertor = currentWire(0,-10,0.5,plasma);
 
 %% Create a magnetic configuration
 % Group currents and blabla
+clear config
 config = mConf(R, [plasma,divertor]);
 
 %% Plots the resulting configuration
@@ -26,6 +27,18 @@ figure
 subplot(1,2,1)
 quiver(lX,lY,config.magFieldX(lX,lY),config.magFieldY(lX,lY),2)
 axis image
-subplot(1,2,2)
+ax = subplot(1,2,2);
 contourf(X,Y,config.fluxFx(X,Y),40,'EdgeColor','none')
 axis image
+
+%% Commit the configuration
+% Commiting runs a computation of x-point locations etc.
+config.commit()
+disp('X-Point location:')
+disp(config.xpoints)
+
+hold(ax,'on')
+contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi,...
+    'Parent',ax)
+scatter(config.xpoints(1),config.xpoints(2),40,'or','filled')
+hold(ax,'off')
