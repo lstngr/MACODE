@@ -47,8 +47,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             end
             obj.xPointDetec(varargin{:});
             % Psi Separatrix
-            obj.separatrixPsi = obj.fluxFx(obj.xpoints(1),...
-                obj.xpoints(2));
+            obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
+                obj.xpoints(:,2));
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -56,6 +56,8 @@ classdef mConf < matlab.mixin.SetGet & handle
         
         function xPointDetec(obj,varargin)
             % Detect x points
+            
+            % TODO - Move to private method
             
             % Call signature
             %   xPointDetec, xpoints detected within the coils only
@@ -68,16 +70,63 @@ classdef mConf < matlab.mixin.SetGet & handle
             %   consider.
             % In all cases, returned x-points are unique, and found via
             % vpasolve using randomized behavior.
+            
+            % Define default parameters
+            defaultNXPoint = 1;
+            defaultNTrials = 10;
+            defaultGuesses = [];
+            defaultLimits = [min( [obj.currents(:).x] ), ...
+                             max( [obj.currents(:).x]);...
+                             min( [obj.currents(:).y] ),...
+                             max( [obj.currents(:).y] ) ];
+            % Parse inputs
+            p = inputParser;
+            addOptional(p,'nxpt',defaultNXPoint,...
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+            addOptional(p,'ntri',defaultNTrials,...
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+            addOptional(p,'guesses',defaultGuesses,...
+                @(x)validateattributes(x,{'numeric'},{'2d','ncols',2}));
+            addParameter(p,'Limits',defaultLimits,...
+                @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
+            parse(p,varargin{:})
+            
+            % Make sure limits are compatible
+            solve_lims = p.Results.Limits;
+            if ~isempty(p.Results.guesses)
+                guess_lims = [ min(p.Results.guesses(:,1)),...
+                    max(p.Results.guesses(:,1)),...
+                    min(p.Results.guesses(:,2)),...
+                    max(p.Results.guesses(:,2)) ];
+                lim_diff = solve_lims - guess_lims;
+                lim_diff(:,1) = -lim_diff(:,1); % Minimum column difference reversed
+                lim_outside = lim_diff < 0;
+                if any(lim_outside)
+                    warning('guess found outside solving area. Extending domain.')
+                    solve_lims(lim_outside) = guess_lims(lim_outside);
+                end
+            end
+            
+            % Load symbolic field functions
             syms x y
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
-            xmin = min( [obj.currents(:).x] );
-            xmax = max( [obj.currents(:).x] );
-            ymin = min( [obj.currents(:).y] );
-            ymax = max( [obj.currents(:).y] );
-            pts = vpasolve( [symBx==0,symBy==0], [x,y], [xmin,xmax;ymin,ymax],...
-                'random',true);
-            obj.xpoints = double(horzcat(pts.x,pts.y));
+            
+            % Trials to find x-points
+            pts = zeros(p.Results.ntri,2);
+            for i=1:p.Results.ntri
+                sol = vpasolve( [symBx==0,symBy==0], [x,y], solve_lims,'random',true);
+                if ~isempty(sol)
+                    % Solution found
+                    pts(i,:) = double([sol.x,sol.y]);
+                else
+                    % If no solutions, fill with NaN
+                    pts(i,:) = NaN;
+                end
+            end
+            pts(isnan(pts)) = []; % Remove NaN points
+            pts = unique(pts,'rows'); % Remove duplicate solutions
+            obj.xpoints = pts;
         end
         
         function bx = magFieldX(obj,x,y)
