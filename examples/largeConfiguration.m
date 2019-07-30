@@ -24,11 +24,12 @@ divertor2= currentWire(Lx/2,Ly+1/5*Ly,propDiv,plasma);
 % Group currents and blabla
 clear config
 config = mConf(R, [plasma,divertor,divertor2]);
-config.commit();
+config.commit(2,6);
 
 figure
 hold on
 contourf(X,Y,config.fluxFx(X,Y),40,'EdgeColor','none')
 contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
+scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 hold off
 axis image
