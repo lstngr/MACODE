@@ -72,7 +72,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             % vpasolve using randomized behavior.
             
             % Define default parameters
-            defaultNXPoint = 1;
+            defaultNXPoint = +Inf;
             defaultNTrials = 10;
             defaultGuesses = [];
             defaultLimits = [min( [obj.currents(:).x] ), ...
@@ -109,24 +109,30 @@ classdef mConf < matlab.mixin.SetGet & handle
             
             % Load symbolic field functions
             syms x y
-            symBx = obj.symMagFieldX;
-            symBy = obj.symMagFieldY;
             
             % Trials to find x-points
             pts = zeros(p.Results.ntri,2);
             for i=1:p.Results.ntri
-                sol = vpasolve( [symBx==0,symBy==0], [x,y], solve_lims,'random',true);
-                if ~isempty(sol)
+                sol = vpasolve( [obj.symMagFieldX==0,obj.symMagFieldY==0],...
+                                [x,y], solve_lims,'random',true);
+                if numel(sol)==1
                     % Solution found
                     pts(i,:) = double([sol.x,sol.y]);
+                    if ~isfinite(obj.fluxFx(pts(i,1),pts(i,2)))
+                        % Might have found minimum of Psi, not good
+                        pts(i,:) = NaN;
+                    end
+                elseif numel(sol)>1
+                    error('wouldn''t expect 2 solutions. What''s happening??')
                 else
                     % If no solutions, fill with NaN
                     pts(i,:) = NaN;
                 end
             end
-            pts(isnan(pts)) = []; % Remove NaN points
+            pts(isnan(pts(:,1)),:) = []; % Remove NaN points
             pts = unique(pts,'rows'); % Remove duplicate solutions
-            obj.xpoints = pts;
+            maxxpt = min(p.Results.nxpt,size(pts,1));
+            obj.xpoints = pts(1:maxxpt,:);
         end
         
         function bx = magFieldX(obj,x,y)
