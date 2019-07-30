@@ -118,10 +118,6 @@ classdef mConf < matlab.mixin.SetGet & handle
                 if numel(sol)==1
                     % Solution found
                     pts(i,:) = double([sol.x,sol.y]);
-                    if ~isfinite(obj.fluxFx(pts(i,1),pts(i,2)))
-                        % Might have found minimum of Psi, not good
-                        pts(i,:) = NaN;
-                    end
                 elseif numel(sol)>1
                     error('wouldn''t expect 2 solutions. What''s happening??')
                 else
@@ -129,7 +125,9 @@ classdef mConf < matlab.mixin.SetGet & handle
                     pts(i,:) = NaN;
                 end
             end
-            pts(isnan(pts(:,1)),:) = []; % Remove NaN points
+            % Might have found minimum of Psi, not good
+            pts(~isfinite(obj.fluxFx(pts(:,1),pts(:,2))),:) = NaN;
+            pts(isnan(pts(:,1)),:) = []; % Remove NaN point
             pts = unique(pts,'rows'); % Remove duplicate solutions
             maxxpt = min(p.Results.nxpt,size(pts,1));
             obj.xpoints = pts(1:maxxpt,:);
