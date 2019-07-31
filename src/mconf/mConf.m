@@ -214,12 +214,21 @@ classdef mConf < matlab.mixin.SetGet & handle
             
             % Trials to find x-points
             pts = zeros(p.Results.ntri,2);
+            diffxx =  diff(obj.symMagFieldX,y);
+            diffyy = -diff(obj.symMagFieldY,x);
+            diffxy = diff(obj.symMagFieldX,x); % d2psidxdy
             for i=1:p.Results.ntri
                 sol = vpasolve( [obj.symMagFieldX==0,obj.symMagFieldY==0],...
                                 [x,y], solve_lims,'random',true);
                 if numel(sol.x)==1
                     % Solution found
-                    pts(i,:) = double([sol.x,sol.y]);
+                    if subs(diffxx*diffyy-diffxy^2,...
+                            {'x','y'},{double(sol.x),double(sol.y)}) < 0
+                        % Found a saddle point.
+                        pts(i,:) = double([sol.x,sol.y]);
+                    else
+                        pts(i,:) = NaN;
+                    end
                 elseif numel(sol.x)>1
                     error('wouldn''t expect 2 solutions. What''s happening??')
                 else
