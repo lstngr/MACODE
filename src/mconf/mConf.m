@@ -104,7 +104,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             defaultTarget = obj.corePosition + [100,0]; % TODO, intelligent limit
             defaultNormalize = true;
             defaultSkipFirst = true;
-            allowedUnits = {'rho','dist'};
+            allowedUnits = {'psi','dist'};
             defaultUnits = allowedUnits{1};
             % Input parser setup
             p = inputParser;
