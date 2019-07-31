@@ -11,6 +11,10 @@ classdef mConf < matlab.mixin.SetGet & handle
         corePosition
     end
     
+    properties
+        simArea = []
+    end
+    
     properties(Access=private)
         old_bx, old_by
     end
@@ -31,7 +35,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             % curs!
             % TODO - Check if this line is really needed. Would also need
             % to consider ALL currents...
-            assert(sum([curs(:).plasma])<2,'Expected at most one plasma current.')
+            assert(sum([curs(:).isPlasma])<2,'Expected at most one plasma current.')
             obj.currents = curs;
         end
         
@@ -113,15 +117,10 @@ classdef mConf < matlab.mixin.SetGet & handle
             % Average and local safety factors are computed by two
             % different (private) methods
             narginchk(1,3)
-            nargoutchk(1,2)
-            if nargin==1
-                assert(nargout==1)
-                varargout{1} = obj.avgSafetyFactor(varargin{:});
-            else
-                varargout{1} = obj.localSafetyFactor(varargin{:});
-                if nargout==2
-                    varargout{2} = obj.avgSafetyFactor(varargin{:});
-                end
+            nargoutchk(1,4)
+            [varargout{1:2}] = obj.localSafetyFactor(varargin{:});
+            if nargout>2
+                [varargout{3:4}] = obj.avgSafetyFactor(varargin{:});
             end
         end
         
@@ -148,6 +147,17 @@ classdef mConf < matlab.mixin.SetGet & handle
                 f = f + cur.fluxFx(x,y,obj.R);
             end
         end
+        
+        function area = get.simArea(obj)
+            if isempty(obj.simArea)
+                area = [min( [obj.currents(:).x] ), ...
+                             max( [obj.currents(:).x]);...
+                             min( [obj.currents(:).y] ),...
+                             max( [obj.currents(:).y] ) ];
+                return;
+            end
+            area = obj.simArea;
+        end
     end
     
     methods(Access=private)
@@ -171,10 +181,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             defaultNXPoint = +Inf;
             defaultNTrials = 10;
             defaultGuesses = [];
-            defaultLimits = [min( [obj.currents(:).x] ), ...
-                             max( [obj.currents(:).x]);...
-                             min( [obj.currents(:).y] ),...
-                             max( [obj.currents(:).y] ) ];
+            defaultLimits = obj.simArea;
             % Parse inputs
             p = inputParser;
             addOptional(p,'nxpt',defaultNXPoint,...
@@ -235,17 +242,17 @@ classdef mConf < matlab.mixin.SetGet & handle
             % NOTE - Get rid of the symbolic toolbox with fminsearch?
             
             % Detect configuration's core (minimum flux function)
-            plasma = obj.currents([obj.currents(:).plasma]);
+            plasma = obj.currents([obj.currents(:).isPlasma]);
             assert(numel(plasma)==1)
             syms x y
-            diffx=diff(obj.symFluxFx,x);
-            diffy=diff(obj.symFluxFx,y);
-            sol = vpasolve([diffx==0,diffy==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
+            bx = obj.symMagFieldX;
+            by = obj.symMagFieldY;
+            sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
             assert(numel(sol.x)==1)
             obj.corePosition = double([sol.x,sol.y]);
         end
         
-        function q = localSafetyFactor(obj,target,npts)
+        function [q,p] = localSafetyFactor(obj,target,npts)
             assert(~isempty(obj.corePosition))
             assert(~isequal(target,obj.corePosition))
             target = [linspace(obj.corePosition(1),target(1),npts);...
@@ -257,11 +264,39 @@ classdef mConf < matlab.mixin.SetGet & handle
             bField = [obj.magFieldX(target(1,:),target(2,:));...
                       obj.magFieldY(target(1,:),target(2,:))];
             bPol = dot(bField,grdChi,1);
-            q = (r/obj.R).*bPol;
+            q = (r/obj.R)./bPol;
+            p = obj.fluxFx(target(1,:),target(2,:));
         end
         
-        function q = avgSafetyFactor(obj)
-            
+        function [q,p] = avgSafetyFactor(obj,target,npts)
+            % TODO - Fix ugly signature in mConf.safetyFactor
+            assert(~isempty(obj.corePosition))
+            target = [linspace(obj.corePosition(1),target(1),npts+1);...
+                      linspace(obj.corePosition(2),target(2),npts+1)];
+            % Get closed contours on target points
+            contour_resolution = 0.5;
+            Lx = obj.simArea(1,2) - obj.simArea(1,1);
+            Ly = obj.simArea(2,2) - obj.simArea(2,1);
+            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
+            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
+            [CX,CY] = meshgrid(cx,cy);
+            p = obj.fluxFx(target(1,:),target(2,:));
+            C = contourc(cx,cy,obj.fluxFx(CX,CY),p);
+            S = extract_contourc(C);
+            S = removeOpenContours(S);
+            % Compute average q on all these contours
+            q = zeros(size(S));
+            p = [S.level];
+            for i=1:numel(S)
+                ss = S(i);
+                r = hypot(ss.x-target(1,1), ss.y-target(2,1));
+                grdChi = [obj.gradXPolAngle(ss.x,ss.y);...
+                    obj.gradYPolAngle(ss.x,ss.y)];
+                grdChi = bsxfun(@rdivide,grdChi,hypot(grdChi(1,:),grdChi(2,:)));
+                bField = [obj.magFieldX(ss.x,ss.y);obj.magFieldY(ss.x,ss.y)];
+                bPol = dot(bField,grdChi,1);
+                q(i) = mean(r./bPol)/obj.R;
+            end
         end
     end
 end

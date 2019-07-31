@@ -25,6 +25,7 @@ divertor2= currentWire(divertx*Lx,Ly+1/5*Ly,propDiv,plasma);
 
 clear config
 config = mConf(R, [plasma,divertor,divertor2]);
+config.simArea = [0,Lx;0,Ly];
 config.commit(2);
 
 figure
@@ -35,3 +36,10 @@ scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
 axis image
+
+%% Compute safety factor
+[q,p,qavg,pavg] = config.safetyFactor([400,600],30);
+figure
+plot(p,q)
+figure
+plot(pavg,qavg)

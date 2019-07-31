@@ -10,7 +10,7 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     end
     
     properties(Access=public)
-        plasma = false;
+        isPlasma = false;
     end
     
     properties(Dependent,Access=public)
@@ -64,8 +64,8 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
             obj.y = y;
         end
         
-        function set.plasma(obj,p)
-            obj.plasma = p;
+        function set.isPlasma(obj,p)
+            obj.isPlasma = p;
         end
         
         function set.c(obj,c)
