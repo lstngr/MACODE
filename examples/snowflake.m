@@ -35,18 +35,3 @@ scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
 axis image
-
-% %% Compute safety factor
-% [q,p,qavg,pavg] = config.safetyFactor([500,400],30);
-% figure
-% hold on
-% ax = plot(p,q);
-% line(repmat(config.separatrixPsi(1),1,2),ylim,'LineStyle','--','Color','k')
-% line(repmat(config.psi95,1,2),ylim,'LineStyle','--','Color','r')
-% hold off
-% figure
-% hold on
-% plot(pavg,qavg)
-% line(repmat(config.separatrixPsi(1),1,2),ylim,'LineStyle','--','Color','k')
-% line(repmat(config.psi95,1,2),ylim,'LineStyle','--','Color','r')
-% hold off

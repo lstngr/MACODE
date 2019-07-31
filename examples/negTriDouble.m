@@ -14,8 +14,8 @@ R = 700;
 xplasma = 0.4;
 divertx = 0.375 + xplasma;
 
-iPlasma = 100;
-sgmPlasma = 15;
+iPlasma = 20;
+sgmPlasma = 90;
 propDiv = 1.2;
 
 plasma   = currentGaussian(xplasma*Lx,1/2*Ly,iPlasma,sgmPlasma);
