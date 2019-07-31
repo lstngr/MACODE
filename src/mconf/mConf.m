@@ -17,6 +17,7 @@ classdef mConf < matlab.mixin.SetGet & handle
     
     properties(Dependent)
         psi95
+        separatrixPsiTol
     end
     
     properties(Access=private)
@@ -95,22 +96,39 @@ classdef mConf < matlab.mixin.SetGet & handle
             end
         end
         
-        function varargout = safetyFactor(obj,varargin)
-            % Expect one of the following signatures
-            % q_avg = safetyFactor, computes the average safety factor up
-            % to (outer?) separatrix
-            % q_loc = safetyFactor(target), computes the local safety
-            % factor between the core and the point given in target.
-            % [q_loc,q_avg] = safetyFactor(target), same as above, but
-            % also returns the average safety factor.
-            %
+        function varargout = safetyFactor(obj,varargin)            
+            % Check plasma is found
+            assert(~isempty(obj.corePosition))
+            % Parser defaults
+            defaultNPts = 100;
+            defaultTarget = obj.corePosition + [100,0]; % TODO, intelligent limit
+            defaultNormalize = true;
+            defaultSkipFirst = true;
+            allowedUnits = {'rho','dist'};
+            defaultUnits = allowedUnits{1};
+            % Input parser setup
+            p = inputParser;
+            addOptional(p,'npts',defaultNPts,@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
+            addOptional(p,'target',defaultTarget,@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
+            addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
+            addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
+            addParameter(p,'Units',defaultUnits)
+            % Parse arguments
+            parse(p,varargin{:})
+            npts = p.Results.npts;
+            targ = p.Results.target;
+            nrmd = p.Results.Normalize;
+            skpf = p.Results.SkipFirst;
+            % Validate remaining arguments
+            validUnits = validatestring(p.Results.Units,allowedUnits);
+            
             % Average and local safety factors are computed by two
             % different (private) methods
             narginchk(1,3)
             nargoutchk(1,4)
-            [varargout{1:2}] = obj.localSafetyFactor(varargin{:});
+            [varargout{1:2}] = obj.localSafetyFactor(npts,targ,nrmd,skpf,validUnits);
             if nargout>2
-                [varargout{3:4}] = obj.avgSafetyFactor(varargin{:});
+                [varargout{3:4}] = obj.avgSafetyFactor(npts,targ,nrmd,skpf,validUnits);
             end
         end
         
@@ -155,6 +173,12 @@ classdef mConf < matlab.mixin.SetGet & handle
             sp = unique(obj.separatrixPsi);
             cp = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
             p = cp + 0.95*(sp-cp);
+        end
+        
+        function p = get.separatrixPsiTol(obj)
+            % Return separatrix with numerical tolerance
+            % TODO - Eventually add a custom tolerance parameter?
+            p = uniquetol(obj.separatrixPsi,1e-10);
         end
         
     end
@@ -211,7 +235,6 @@ classdef mConf < matlab.mixin.SetGet & handle
             
             % Load symbolic field functions
             syms x y
-            
             % Trials to find x-points
             pts = zeros(p.Results.ntri,2);
             diffxx =  diff(obj.symMagFieldX,y);
@@ -260,7 +283,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             obj.corePosition = double([sol.x,sol.y]);
         end
         
-        function [q,p] = localSafetyFactor(obj,target,npts)
+        function [q,p] = localSafetyFactor(obj,npts,target,~,~,~)
             % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
             assert(~isequal(target,obj.corePosition))
@@ -273,7 +296,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             p = obj.fluxFx(target(1,:),target(2,:));
         end
         
-        function [q,p] = avgSafetyFactor(obj,target,npts)
+        function [q,p] = avgSafetyFactor(obj,npts,target,~,~,~)
             % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
             target = [linspace(obj.corePosition(1),target(1),npts+1);...

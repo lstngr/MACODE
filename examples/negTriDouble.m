@@ -38,7 +38,7 @@ hold off
 axis image
 
 %% Compute safety factor
-[q,p,qavg,pavg] = config.safetyFactor([500,400],30);
+[q,p,qavg,pavg] = config.safetyFactor(30,[500,400]);
 figure
 hold on
 ax = plot(p,q);
