@@ -112,8 +112,17 @@ classdef mConf < matlab.mixin.SetGet & handle
             %
             % Average and local safety factors are computed by two
             % different (private) methods
-            narginchk(1,2)
+            narginchk(1,3)
             nargoutchk(1,2)
+            if nargin==1
+                assert(nargout==1)
+                varargout{1} = obj.avgSafetyFactor(varargin{:});
+            else
+                varargout{1} = obj.localSafetyFactor(varargin{:});
+                if nargout==2
+                    varargout{2} = obj.avgSafetyFactor(varargin{:});
+                end
+            end
         end
         
         function f = symMagFieldX(obj)
@@ -223,7 +232,8 @@ classdef mConf < matlab.mixin.SetGet & handle
         function coreDetec(obj)
             % TODO - Add parameters controlling the rand addition to
             % initial guess.
-            % TODO - Get rid of the symbolic toolbox with fminsearch?
+            % NOTE - Get rid of the symbolic toolbox with fminsearch?
+            
             % Detect configuration's core (minimum flux function)
             plasma = obj.currents([obj.currents(:).plasma]);
             assert(numel(plasma)==1)
@@ -235,8 +245,19 @@ classdef mConf < matlab.mixin.SetGet & handle
             obj.corePosition = double([sol.x,sol.y]);
         end
         
-        function q = localSafetyFactor(obj,target)
-            
+        function q = localSafetyFactor(obj,target,npts)
+            assert(~isempty(obj.corePosition))
+            assert(~isequal(target,obj.corePosition))
+            target = [linspace(obj.corePosition(1),target(1),npts);...
+                      linspace(obj.corePosition(2),target(2),npts)];
+            r = hypot(target(1,:)-target(1,1),target(2,:)-target(2,1));
+            grdChi = [obj.gradXPolAngle(target(1,:),target(2,:));...
+                      obj.gradYPolAngle(target(1,:),target(2,:))];
+            grdChi = bsxfun(@rdivide,grdChi,hypot(grdChi(1,:),grdChi(2,:)));
+            bField = [obj.magFieldX(target(1,:),target(2,:));...
+                      obj.magFieldY(target(1,:),target(2,:))];
+            bPol = dot(bField,grdChi,1);
+            q = (r/obj.R).*bPol;
         end
         
         function q = avgSafetyFactor(obj)
