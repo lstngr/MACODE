@@ -88,20 +88,6 @@ classdef mConf < matlab.mixin.SetGet & handle
             gy =  obj.R * obj.magFieldX(x,y);
         end
         
-        function gx = gradXPolAngle(obj,x,y)
-            % TODO - Check direction of gradient of chi (taken clockwise so
-            % that gradPsi^gradChi point in the direction of positive z in
-            % the version below).
-            gx = obj.gradYFluxFx(x,y);
-        end
-        
-        function gy = gradYPolAngle(obj,x,y)
-            % TODO - Check direction of gradient of chi (taken clockwise so
-            % that gradPsi^gradChi point in the direction of positive z in
-            % the version below).
-            gy = -obj.gradXFluxFx(x,y);
-        end
-        
         function p = fluxFx(obj,x,y)
             p = zeros(size(x));
             for cur=obj.currents
@@ -272,12 +258,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             target = [linspace(obj.corePosition(1),target(1),npts);...
                       linspace(obj.corePosition(2),target(2),npts)];
             r = hypot(target(1,:)-target(1,1),target(2,:)-target(2,1));
-            grdChi = [obj.gradXPolAngle(target(1,:),target(2,:));...
-                      obj.gradYPolAngle(target(1,:),target(2,:))];
-            grdChi = bsxfun(@rdivide,grdChi,hypot(grdChi(1,:),grdChi(2,:)));
-            bField = [obj.magFieldX(target(1,:),target(2,:));...
-                      obj.magFieldY(target(1,:),target(2,:))];
-            bPol = dot(bField,grdChi,1);
+            bPol = hypot(obj.magFieldX(target(1,:),target(2,:)),...
+                         obj.magFieldY(target(1,:),target(2,:)));
             q = (r/obj.R)./bPol;
             p = obj.fluxFx(target(1,:),target(2,:));
         end
@@ -304,11 +286,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             for i=1:numel(S)
                 ss = S(i);
                 r = hypot(ss.x-target(1,1), ss.y-target(2,1));
-                grdChi = [obj.gradXPolAngle(ss.x,ss.y);...
-                    obj.gradYPolAngle(ss.x,ss.y)];
-                grdChi = bsxfun(@rdivide,grdChi,hypot(grdChi(1,:),grdChi(2,:)));
-                bField = [obj.magFieldX(ss.x,ss.y);obj.magFieldY(ss.x,ss.y)];
-                bPol = dot(bField,grdChi,1);
+                bPol = hypot(obj.magFieldX(ss.x,ss.y),obj.magFieldY(ss.x,ss.y));
                 q(i) = mean(r./bPol)/obj.R;
             end
         end
