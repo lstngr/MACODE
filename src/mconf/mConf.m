@@ -3,7 +3,7 @@
 
 classdef mConf < matlab.mixin.SetGet & handle
     
-    properties
+    properties(GetAccess=public,SetAccess=private)
         R
         currents = currentWire.empty()
         xpoints
@@ -41,6 +41,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             symBy = obj.symMagFieldY;
             if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
                 if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) )
+                    % TODO - Allow user to force a commit
                     warning('magnetic structure unchanged since last commit.')
                     return;
                 end
@@ -103,7 +104,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             syms x y
             f = sym(0);
             for cur=obj.currents
-                f = f + cur.FluxFx(x,y,obj.R);
+                f = f + cur.fluxFx(x,y,obj.R);
             end
         end
     end
