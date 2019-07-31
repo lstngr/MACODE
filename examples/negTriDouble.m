@@ -38,8 +38,16 @@ hold off
 axis image
 
 %% Compute safety factor
-[q,p,qavg,pavg] = config.safetyFactor([400,600],30);
+[q,p,qavg,pavg] = config.safetyFactor([500,400],30);
 figure
-plot(p,q)
+hold on
+ax = plot(p,q);
+line(repmat(config.separatrixPsi(1),1,2),ylim,'LineStyle','--','Color','k')
+line(repmat(config.psi95,1,2),ylim,'LineStyle','--','Color','r')
+hold off
 figure
+hold on
 plot(pavg,qavg)
+line(repmat(config.separatrixPsi(1),1,2),ylim,'LineStyle','--','Color','k')
+line(repmat(config.psi95,1,2),ylim,'LineStyle','--','Color','r')
+hold off

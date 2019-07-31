@@ -15,6 +15,10 @@ classdef mConf < matlab.mixin.SetGet & handle
         simArea = []
     end
     
+    properties(Dependent)
+        psi95
+    end
+    
     properties(Access=private)
         old_bx, old_by
     end
@@ -158,6 +162,15 @@ classdef mConf < matlab.mixin.SetGet & handle
             end
             area = obj.simArea;
         end
+        
+        function p = get.psi95(obj)
+            assert(~isempty(obj.separatrixPsi));
+            assert(~isempty(obj.corePosition));
+            sp = unique(obj.separatrixPsi);
+            cp = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
+            p = cp + 0.95*(sp-cp);
+        end
+        
     end
     
     methods(Access=private)
@@ -218,10 +231,10 @@ classdef mConf < matlab.mixin.SetGet & handle
             for i=1:p.Results.ntri
                 sol = vpasolve( [obj.symMagFieldX==0,obj.symMagFieldY==0],...
                                 [x,y], solve_lims,'random',true);
-                if numel(sol)==1
+                if numel(sol.x)==1
                     % Solution found
                     pts(i,:) = double([sol.x,sol.y]);
-                elseif numel(sol)>1
+                elseif numel(sol.x)>1
                     error('wouldn''t expect 2 solutions. What''s happening??')
                 else
                     % If no solutions, fill with NaN
@@ -253,6 +266,7 @@ classdef mConf < matlab.mixin.SetGet & handle
         end
         
         function [q,p] = localSafetyFactor(obj,target,npts)
+            % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
             assert(~isequal(target,obj.corePosition))
             target = [linspace(obj.corePosition(1),target(1),npts);...
@@ -274,7 +288,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             target = [linspace(obj.corePosition(1),target(1),npts+1);...
                       linspace(obj.corePosition(2),target(2),npts+1)];
             % Get closed contours on target points
-            contour_resolution = 0.5;
+            contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);
             Ly = obj.simArea(2,2) - obj.simArea(2,1);
             cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
