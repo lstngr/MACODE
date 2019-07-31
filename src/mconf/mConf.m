@@ -77,6 +77,20 @@ classdef mConf < matlab.mixin.SetGet & handle
             gy =  obj.R * obj.magFieldX(x,y);
         end
         
+        function gx = gradXPolAngle(obj,x,y)
+            % TODO - Check direction of gradient of chi (taken clockwise so
+            % that gradPsi^gradChi point in the direction of positive z in
+            % the version below).
+            gx = obj.gradYFluxFx(x,y);
+        end
+        
+        function gy = gradYPolAngle(obj,x,y)
+            % TODO - Check direction of gradient of chi (taken clockwise so
+            % that gradPsi^gradChi point in the direction of positive z in
+            % the version below).
+            gy = -obj.gradXFluxFx(x,y);
+        end
+        
         function p = fluxFx(obj,x,y)
             p = zeros(size(x));
             for cur=obj.currents
