@@ -10,6 +10,7 @@ y = linspace(-20,120,120);
 R = 150;
 
 plasma = currentGaussian(0,60,1,4);
+plasma.isPlasma = true;
 divertor = currentWire(0,-10,0.5,plasma);
 
 %% Create a magnetic configuration
@@ -41,4 +42,5 @@ hold(ax,'on')
 contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi,...
     'Parent',ax)
 scatter(config.xpoints(1),config.xpoints(2),40,'or','filled')
+scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold(ax,'off')

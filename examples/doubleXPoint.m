@@ -17,6 +17,7 @@ sgmPlasma = 15;
 propDiv = 1.2;
 
 plasma   = currentGaussian(Lx/2,1/2*Ly,iPlasma,sgmPlasma);
+plasma.isPlasma = true;
 divertor = currentWire(Lx/2,-1/5*Ly,propDiv,plasma);
 divertor2= currentWire(Lx/2,Ly+1/5*Ly,propDiv,plasma);
 
@@ -31,5 +32,6 @@ hold on
 contourf(X,Y,config.fluxFx(X,Y),40,'EdgeColor','none')
 contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
 scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
+scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
 axis image

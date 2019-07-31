@@ -8,6 +8,7 @@ classdef mConf < matlab.mixin.SetGet & handle
         currents = currentWire.empty()
         xpoints
         separatrixPsi
+        corePosition
     end
     
     properties(Access=private)
@@ -50,6 +51,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             % Psi Separatrix
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
+            % Find core location
+            obj.coreDetec;
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -96,6 +99,21 @@ classdef mConf < matlab.mixin.SetGet & handle
             for cur=obj.currents
                 p = p + cur.fluxFx(x,y,obj.R);
             end
+        end
+        
+        function varargout = safetyFactor(obj,varargin)
+            % Expect one of the following signatures
+            % q_avg = safetyFactor, computes the average safety factor up
+            % to (outer?) separatrix
+            % q_loc = safetyFactor(target), computes the local safety
+            % factor between the core and the point given in target.
+            % [q_loc,q_avg] = safetyFactor(target), same as above, but
+            % also returns the average safety factor.
+            %
+            % Average and local safety factors are computed by two
+            % different (private) methods
+            narginchk(1,2)
+            nargoutchk(1,2)
         end
         
         function f = symMagFieldX(obj)
@@ -202,5 +220,27 @@ classdef mConf < matlab.mixin.SetGet & handle
             obj.xpoints = pts(1:maxxpt,:);
         end
         
+        function coreDetec(obj)
+            % TODO - Add parameters controlling the rand addition to
+            % initial guess.
+            % TODO - Get rid of the symbolic toolbox with fminsearch?
+            % Detect configuration's core (minimum flux function)
+            plasma = obj.currents([obj.currents(:).plasma]);
+            assert(numel(plasma)==1)
+            syms x y
+            diffx=diff(obj.symFluxFx,x);
+            diffy=diff(obj.symFluxFx,y);
+            sol = vpasolve([diffx==0,diffy==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
+            assert(numel(sol.x)==1)
+            obj.corePosition = double([sol.x,sol.y]);
+        end
+        
+        function q = localSafetyFactor(obj,target)
+            
+        end
+        
+        function q = avgSafetyFactor(obj)
+            
+        end
     end
 end
