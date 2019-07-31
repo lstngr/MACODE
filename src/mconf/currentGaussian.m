@@ -34,7 +34,9 @@ classdef currentGaussian < current
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
             u  = 0.5 * d2 / obj.sigma^2;
-            flx = .5 * obj.curr * R * ( log(u) - real(-expint(u)) );
+            % Integration prop to log(u) - Ei(-u)
+            % Wolfram says E1(x)=expint(x)=-Ei(-x)
+            flx = .5 * obj.curr * R * ( log(u) + expint(u) );
         end
     end
     
