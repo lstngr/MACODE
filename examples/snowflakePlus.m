@@ -1,4 +1,4 @@
-%% SNOWFLAKE     YEAH
+%% SNOWFLAKEPLUS    YEAH
 % YEAYEAYEA
 
 %% Define domain, currents, configuration and plot
@@ -13,7 +13,7 @@ R = 700;
 
 iPlasma = 11.42857142857143;
 sgmPlasma = 90/sqrt(2);
-propDiv = 3.91723956295538;
+propDiv = 3.91723956295538*1.005;
 propSha = -7.0;
 
 plasma   = currentGaussian(Lx/2,530,iPlasma,sgmPlasma);
@@ -25,7 +25,7 @@ divertor3= currentWire(Lx/2,-210,propSha,plasma);
 clear config
 config = mConf(R, [plasma,divertor,divertor2,divertor3]);
 config.simArea = [0,Lx;0,Ly];
-config.commit(1);
+config.commit(2);
 
 figure
 hold on
