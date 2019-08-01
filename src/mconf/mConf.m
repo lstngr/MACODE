@@ -96,35 +96,35 @@ classdef mConf < matlab.mixin.SetGet & handle
             end
         end
         
-        function varargout = safetyFactor(obj,varargin)            
+        function varargout = safetyFactor(obj,npts,target,varargin)            
             % Check plasma is found
             assert(~isempty(obj.corePosition))
             % Parser defaults
-            defaultNPts = 100;
-            defaultTarget = obj.corePosition + [100,0]; % TODO, intelligent limit
             defaultNormalize = true;
             defaultSkipFirst = true;
             allowedUnits = {'psi','dist'};
             defaultUnits = allowedUnits{1};
             % Input parser setup
             p = inputParser;
-            addOptional(p,'npts',defaultNPts,@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
-            addOptional(p,'target',defaultTarget,@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
+            addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
+            addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
             addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
             addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
             addParameter(p,'Units',defaultUnits)
             % Parse arguments
-            parse(p,varargin{:})
+            parse(p,npts,target,varargin{:})
             npts = p.Results.npts;
             targ = p.Results.target;
             nrmd = p.Results.Normalize;
             skpf = p.Results.SkipFirst;
             % Validate remaining arguments
             validUnits = validatestring(p.Results.Units,allowedUnits);
-            
+            % Add a point if first one skipped
+            if skpf
+                npts = npts + 1;
+            end
             % Average and local safety factors are computed by two
             % different (private) methods
-            narginchk(1,3)
             nargoutchk(1,4)
             [varargout{1:2}] = obj.localSafetyFactor(npts,targ,nrmd,skpf,validUnits);
             if nargout>2
@@ -283,7 +283,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             obj.corePosition = double([sol.x,sol.y]);
         end
         
-        function [q,p] = localSafetyFactor(obj,npts,target,~,~,~)
+        function [q,p] = localSafetyFactor(obj,npts,target,nrmd,skpf,units)
             % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
             assert(~isequal(target,obj.corePosition))
@@ -293,10 +293,26 @@ classdef mConf < matlab.mixin.SetGet & handle
             bPol = hypot(obj.magFieldX(target(1,:),target(2,:)),...
                          obj.magFieldY(target(1,:),target(2,:)));
             q = (r/obj.R)./bPol;
-            p = obj.fluxFx(target(1,:),target(2,:));
+            if skpf
+                target = target(:,2:end);
+                r = r(2:end); q = q(2:end);
+            end
+            if strcmp(units,'dist')
+                p = r;
+                if nrmd
+                    % TODO - Divide the radius by a.
+                end
+            elseif strcmp(units,'psi')
+                p = obj.fluxFx(target(1,:),target(2,:));
+                if nrmd
+                    psiLCFS = min(obj.separatrixPsiTol);
+                    psiCore = obj.fluxFx(obj.corePosition(1), obj.corePosition(2));
+                    p = sqrt( (p-psiCore)/(psiLCFS-psiCore) );
+                end
+            end
         end
         
-        function [q,p] = avgSafetyFactor(obj,npts,target,~,~,~)
+        function [q,p] = avgSafetyFactor(obj,npts,target,nrmd,skpf,units)
             % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
             target = [linspace(obj.corePosition(1),target(1),npts+1);...
@@ -312,14 +328,30 @@ classdef mConf < matlab.mixin.SetGet & handle
             C = contourc(cx,cy,obj.fluxFx(CX,CY),p);
             S = extract_contourc(C);
             S = removeOpenContours(S);
+            % Remove core contour if needed
+            psiCore = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
+            psiLCFS = min(obj.separatrixPsiTol);
+            if S(1).level==psiCore && skpf
+                S = S(2:end);
+            end
             % Compute average q on all these contours
             q = zeros(size(S));
+            ravg = q;
             p = [S.level];
             for i=1:numel(S)
                 ss = S(i);
                 r = hypot(ss.x-target(1,1), ss.y-target(2,1));
                 bPol = hypot(obj.magFieldX(ss.x,ss.y),obj.magFieldY(ss.x,ss.y));
                 q(i) = mean(r./bPol)/obj.R;
+                ravg(i) = mean(r);
+            end
+            if strcmp(units,'dist')
+                p = ravg;
+                if nrmd
+                    % TODO - Normaliye by a
+                end
+            elseif strcmp(units,'psi') && nrmd
+                p = sqrt( (p-psiCore) / (psiLCFS-psiCore) );
             end
         end
     end
