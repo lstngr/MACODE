@@ -384,7 +384,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             if strcmp(units,'dist')
                 p = r;
                 if nrmd
-                    % TODO - Divide the radius by a.
+                    assert(~isempty(obj.magR));
+                    p = p / obj.a;
                 end
             elseif strcmp(units,'psi')
                 p = obj.fluxFx(target(1,:),target(2,:));
@@ -430,7 +431,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             if strcmp(units,'dist')
                 p = ravg;
                 if nrmd
-                    % TODO - Normaliye by a
+                    assert(~isempty(obj.magR));
+                    p = p / obj.a;
                 end
             elseif strcmp(units,'psi') && nrmd
                 p = sqrt( (p-psiCore) / (obj.lcfsPsi-psiCore) );
