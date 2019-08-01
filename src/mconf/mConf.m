@@ -1,7 +1,13 @@
-% TODO - Could implement domain scaling
-% TODO - Support multiple x-points
+% MCONF     Tokamak Magnetic Configuration
 
-classdef mConf < matlab.mixin.SetGet & handle
+% TODO - Could implement domain scaling
+classdef mConf < matlab.mixin.SetGet
+    % MCONF     Tokamak Magnetic Configuration
+    %   MCONF is a class describing a "magnetic configuration" of a
+    %   Tokamak. A set of currents is provided, as well as an area of
+    %   interest. The class then runs a computation of properties of this
+    %   configuration, such as x-point and core detection or computation of
+    %   geometrical properties.
     
     properties(GetAccess=public,SetAccess=private)
         R
@@ -10,6 +16,7 @@ classdef mConf < matlab.mixin.SetGet & handle
         separatrixPsi
         lcfsPsi
         corePosition
+        magR
     end
     
     properties
@@ -24,7 +31,6 @@ classdef mConf < matlab.mixin.SetGet & handle
     end
     
     properties(Access=private)
-        magR
         old_bx, old_by
     end
     
@@ -100,78 +106,6 @@ classdef mConf < matlab.mixin.SetGet & handle
             p = zeros(size(x));
             for cur=obj.currents
                 p = p + cur.fluxFx(x,y,obj.R);
-            end
-        end
-        
-        function varargout = safetyFactor(obj,npts,target,varargin)            
-            % Check plasma is found
-            assert(~isempty(obj.corePosition))
-            % Parser defaults
-            defaultNormalize = true;
-            defaultSkipFirst = true;
-            allowedUnits = {'psi','dist'};
-            defaultUnits = allowedUnits{1};
-            % Input parser setup
-            p = inputParser;
-            addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
-            addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
-            addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
-            addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
-            addParameter(p,'Units',defaultUnits,@ischar)
-            % Parse arguments
-            parse(p,npts,target,varargin{:})
-            npts = p.Results.npts;
-            targ = p.Results.target;
-            nrmd = p.Results.Normalize;
-            skpf = p.Results.SkipFirst;
-            % Validate remaining arguments
-            validUnits = validatestring(p.Results.Units,allowedUnits);
-            % Add a point if first one skipped
-            if skpf
-                npts = npts + 1;
-            end
-            % Average and local safety factors are computed by two
-            % different (private) methods
-            nargoutchk(1,4)
-            [varargout{1:2}] = obj.localSafetyFactor(npts,targ,nrmd,skpf,validUnits);
-            if nargout>2
-                [varargout{3:4}] = obj.avgSafetyFactor(npts,targ,nrmd,skpf,validUnits);
-            end
-        end
-        
-        function varargout = magShear(obj,npts,target,varargin)
-            % Check plasma is found
-            assert(~isempty(obj.corePosition))
-            % Parser defaults
-            defaultNormalize = true;
-            defaultSkipFirst = true;
-            allowedUnits = {'psi','dist'};
-            defaultUnits = allowedUnits{1};
-            % Input parser setup
-            p = inputParser;
-            addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
-            addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
-            addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
-            addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
-            addParameter(p,'Units',defaultUnits,@ischar)
-            % Parse arguments
-            parse(p,npts,target,varargin{:})
-            npts = p.Results.npts;
-            targ = p.Results.target;
-            nrmd = p.Results.Normalize;
-            skpf = p.Results.SkipFirst;
-            % Validate remaining arguments
-            validUnits = validatestring(p.Results.Units,allowedUnits);
-            % Add a point if first one skipped
-            if skpf
-                npts = npts + 1;
-            end
-            % Average and local safety factors are computed by two
-            % different (private) methods
-            nargoutchk(1,4)
-            [varargout{1:2}] = obj.localMagShear(npts,targ,nrmd,skpf,validUnits);
-            if nargout>2
-                [varargout{3:4}] = obj.avgMagShear(npts,targ,nrmd,skpf,validUnits);
             end
         end
         
@@ -401,142 +335,6 @@ classdef mConf < matlab.mixin.SetGet & handle
             sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
             assert(numel(sol.x)==1)
             obj.corePosition = double([sol.x,sol.y]);
-        end
-        
-        function [q,p] = localSafetyFactor(obj,npts,target,nrmd,skpf,units)
-            % TODO - Fix ugly signature in mConf.safetyFactor
-            assert(~isempty(obj.corePosition))
-            assert(~isequal(target,obj.corePosition))
-            target = [linspace(obj.corePosition(1),target(1),npts);...
-                      linspace(obj.corePosition(2),target(2),npts)];
-            r = hypot(target(1,:)-target(1,1),target(2,:)-target(2,1));
-            bPol = hypot(obj.magFieldX(target(1,:),target(2,:)),...
-                         obj.magFieldY(target(1,:),target(2,:)));
-            q = (r/obj.R)./bPol;
-            if skpf
-                target = target(:,2:end);
-                r = r(2:end); q = q(2:end);
-            end
-            if strcmp(units,'dist')
-                p = r;
-                if nrmd
-                    assert(~isempty(obj.magR));
-                    p = p / obj.a;
-                end
-            elseif strcmp(units,'psi')
-                p = obj.fluxFx(target(1,:),target(2,:));
-                if nrmd
-                    psiCore = obj.fluxFx(obj.corePosition(1), obj.corePosition(2));
-                    p = sqrt( (p-psiCore)/(obj.lcfsPsi-psiCore) );
-                end
-            end
-        end
-        
-        function [q,p] = avgSafetyFactor(obj,npts,target,nrmd,skpf,units)
-            % TODO - Fix ugly signature in mConf.safetyFactor
-            assert(~isempty(obj.corePosition))
-            target = [linspace(obj.corePosition(1),target(1),npts);...
-                      linspace(obj.corePosition(2),target(2),npts)];
-            % Get closed contours on target points
-            contour_resolution = 0.75;
-            Lx = obj.simArea(1,2) - obj.simArea(1,1);
-            Ly = obj.simArea(2,2) - obj.simArea(2,1);
-            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
-            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
-            [CX,CY] = meshgrid(cx,cy);
-            p = obj.fluxFx(target(1,:),target(2,:));
-            C = contourc(cx,cy,obj.fluxFx(CX,CY),p);
-            S = extract_contourc(C);
-            S = removeOpenContours(S);
-            % Remove core contour if needed
-            psiCore = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
-            if S(1).level==psiCore && skpf
-                S = S(2:end);
-            end
-            % Compute average q on all these contours
-            q = zeros(size(S));
-            ravg = q;
-            p = [S.level];
-            for i=1:numel(S)
-                ss = S(i);
-                r = hypot(ss.x-target(1,1), ss.y-target(2,1));
-                bPol = hypot(obj.magFieldX(ss.x,ss.y),obj.magFieldY(ss.x,ss.y));
-                q(i) = mean(r./bPol)/obj.R;
-                ravg(i) = mean(r);
-            end
-            if strcmp(units,'dist')
-                p = ravg;
-                if nrmd
-                    assert(~isempty(obj.magR));
-                    p = p / obj.a;
-                end
-            elseif strcmp(units,'psi') && nrmd
-                p = sqrt( (p-psiCore) / (obj.lcfsPsi-psiCore) );
-            end
-        end
-        
-        function [q,p] = localMagShear(obj,npts,target,nrmd,skpf,units)
-            assert(~isempty(obj.corePosition))
-            [s,p] = obj.localSafetyFactor(npts,target,nrmd,skpf,units);
-            theta  = atan((target(2)-obj.corePosition(2)) / ...
-                (target(1)-obj.corePosition(1)));
-            target = [linspace(obj.corePosition(1),target(1),npts);...
-                      linspace(obj.corePosition(2),target(2),npts)];
-            r = hypot(target(1,:)-target(1,1),target(2,:)-target(2,1));
-            bPol = hypot(obj.magFieldX(target(1,:),target(2,:)),...
-                         obj.magFieldY(target(1,:),target(2,:)));
-            syms x y
-            symBPol = sqrt((obj.symMagFieldX)^2 + (obj.symMagFieldY)^2);
-            symdBPol= cos(theta)*diff(symBPol,'x') + sin(theta)*diff(symBPol,'y');
-            dbPoldr = double(subs(symdBPol,{'x','y'},{target(1,:),target(2,:)}));
-            dqdr = 1./(obj.R*bPol) - r./(obj.R*bPol.^2).*dbPoldr;
-            if skpf
-                r = r(2:end);
-                dqdr = dqdr(2:end);
-            end
-            q = r./s.*dqdr;
-        end
-        
-        function [q,p] = avgMagShear(obj,npts,target,nrmd,skpf,units)
-            % TODO - Fix ugly signature in mConf.safetyFactor
-            assert(~isempty(obj.corePosition))
-            [~,p] = obj.avgSafetyFactor(npts,target,nrmd,skpf,units);
-            target = [linspace(obj.corePosition(1),target(1),npts);...
-                      linspace(obj.corePosition(2),target(2),npts)];
-            % Get closed contours on target points
-            contour_resolution = 0.75;
-            Lx = obj.simArea(1,2) - obj.simArea(1,1);
-            Ly = obj.simArea(2,2) - obj.simArea(2,1);
-            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
-            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
-            [CX,CY] = meshgrid(cx,cy);
-            targetPsi = obj.fluxFx(target(1,:),target(2,:));
-            C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
-            S = extract_contourc(C);
-            S = removeOpenContours(S);
-            % Remove core contour if needed
-            psiCore = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
-            if S(1).level==psiCore && skpf
-                S = S(2:end);
-            end
-            syms x y dx dy
-            symBPol = sqrt((obj.symMagFieldX)^2 + (obj.symMagFieldY)^2);
-            symdBPol= dx*diff(symBPol,'x') + dy*diff(symBPol,'y');
-            fdBPol = matlabFunction(symdBPol,'Vars',{x,y,dx,dy});
-            % Compute average dqdr on all these contours
-            q = zeros(size(S));
-            for i=1:numel(S)
-                ss = S(i);
-                r = hypot(ss.x-target(1,1), ss.y-target(2,1));
-                dx = ss.x-target(1,1);
-                dy = ss.y-target(2,1);
-                dd = hypot(dx,dy);
-                dx = dx ./ dd; dy = dy ./ dd;
-                bPol = hypot(obj.magFieldX(ss.x,ss.y),obj.magFieldY(ss.x,ss.y));
-                dbPoldr = fdBPol(ss.x,ss.y,dx,dy);
-                dqdr = 1./(obj.R*bPol)-r./(obj.R*bPol.^2).*dbPoldr;
-                q(i) = mean( obj.R*bPol.*dqdr );
-            end
         end
         
     end
