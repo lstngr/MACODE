@@ -8,6 +8,7 @@ classdef mConf < matlab.mixin.SetGet & handle
         currents = currentWire.empty()
         xpoints
         separatrixPsi
+        lcfsPsi
         corePosition
     end
     
@@ -57,9 +58,10 @@ classdef mConf < matlab.mixin.SetGet & handle
                 end
             end
             obj.xPointDetec(varargin{:});
-            % Psi Separatrix
+            % Psi Separatrix and LCFS
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
+            obj.lcfsDetec;
             % Find core location
             obj.coreDetec;
             % Remember last commit's magnetic structure
@@ -184,6 +186,41 @@ classdef mConf < matlab.mixin.SetGet & handle
     end
     
     methods(Access=private)
+        
+        function lcfsDetec(obj)
+            % Detects the LCFS, so that the user can differentiate with the
+            % separatrixPsi when necessary. 
+            % Called during commit, once x-points and separatrixPsi are
+            % available.
+            
+            % When querying contours at separatrix, MATLAB returns
+            % (usually) two open contours. Shift those psi by an arbitrary
+            % amount to get closed contours
+            
+            % TODO - Get rid of the "arbitrary" amount, or provide user
+            % with adjustable parameter.
+            
+            % Get target psi's
+            assert(~isempty(obj.separatrixPsi))
+            psiOffset = 1;
+            targetPsi = obj.separatrixPsiTol - psiOffset;
+            if numel(targetPsi)==1
+                % Else, contourc will returns targetPsi different contours!
+                targetPsi = repmat(targetPsi,1,2);
+            end
+            % Grab associated _closed_ contours
+            contour_resolution = 0.75;
+            Lx = obj.simArea(1,2) - obj.simArea(1,1);
+            Ly = obj.simArea(2,2) - obj.simArea(2,1);
+            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
+            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
+            [CX,CY] = meshgrid(cx,cy);
+            C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+            S = extract_contourc(C);
+            S = removeOpenContours(S);
+            % Maximum available value of Psi must be LCFS
+            obj.lcfsPsi = max(S.level)+psiOffset;
+        end
         
         function xPointDetec(obj,varargin)
             % Detect x points
@@ -354,5 +391,6 @@ classdef mConf < matlab.mixin.SetGet & handle
                 p = sqrt( (p-psiCore) / (psiLCFS-psiCore) );
             end
         end
+        
     end
 end
