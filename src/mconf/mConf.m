@@ -117,7 +117,7 @@ classdef mConf < matlab.mixin.SetGet & handle
             addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
             addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
             addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
-            addParameter(p,'Units',defaultUnits)
+            addParameter(p,'Units',defaultUnits,@ischar)
             % Parse arguments
             parse(p,npts,target,varargin{:})
             npts = p.Results.npts;
@@ -136,6 +136,42 @@ classdef mConf < matlab.mixin.SetGet & handle
             [varargout{1:2}] = obj.localSafetyFactor(npts,targ,nrmd,skpf,validUnits);
             if nargout>2
                 [varargout{3:4}] = obj.avgSafetyFactor(npts,targ,nrmd,skpf,validUnits);
+            end
+        end
+        
+        function varargout = magShear(obj,npts,target,varargin)
+            % Check plasma is found
+            assert(~isempty(obj.corePosition))
+            % Parser defaults
+            defaultNormalize = true;
+            defaultSkipFirst = true;
+            allowedUnits = {'psi','dist'};
+            defaultUnits = allowedUnits{1};
+            % Input parser setup
+            p = inputParser;
+            addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
+            addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
+            addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
+            addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
+            addParameter(p,'Units',defaultUnits,@ischar)
+            % Parse arguments
+            parse(p,npts,target,varargin{:})
+            npts = p.Results.npts;
+            targ = p.Results.target;
+            nrmd = p.Results.Normalize;
+            skpf = p.Results.SkipFirst;
+            % Validate remaining arguments
+            validUnits = validatestring(p.Results.Units,allowedUnits);
+            % Add a point if first one skipped
+            if skpf
+                npts = npts + 1;
+            end
+            % Average and local safety factors are computed by two
+            % different (private) methods
+            nargoutchk(1,4)
+            [varargout{1:2}] = obj.localMagShear(npts,targ,nrmd,skpf,validUnits);
+            if nargout>2
+                [varargout{3:4}] = obj.avgMagShear(npts,targ,nrmd,skpf,validUnits);
             end
         end
         
@@ -399,8 +435,8 @@ classdef mConf < matlab.mixin.SetGet & handle
         function [q,p] = avgSafetyFactor(obj,npts,target,nrmd,skpf,units)
             % TODO - Fix ugly signature in mConf.safetyFactor
             assert(~isempty(obj.corePosition))
-            target = [linspace(obj.corePosition(1),target(1),npts+1);...
-                      linspace(obj.corePosition(2),target(2),npts+1)];
+            target = [linspace(obj.corePosition(1),target(1),npts);...
+                      linspace(obj.corePosition(2),target(2),npts)];
             % Get closed contours on target points
             contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);
@@ -437,6 +473,32 @@ classdef mConf < matlab.mixin.SetGet & handle
             elseif strcmp(units,'psi') && nrmd
                 p = sqrt( (p-psiCore) / (obj.lcfsPsi-psiCore) );
             end
+        end
+        
+        function [q,p] = localMagShear(obj,npts,target,nrmd,skpf,units)
+            assert(~isempty(obj.corePosition))
+            [s,p] = obj.localSafetyFactor(npts,target,nrmd,skpf,units);
+            theta  = atan((target(2)-obj.corePosition(2)) / ...
+                (target(1)-obj.corePosition(1)));
+            target = [linspace(obj.corePosition(1),target(1),npts);...
+                      linspace(obj.corePosition(2),target(2),npts)];
+            r = hypot(target(1,:)-target(1,1),target(2,:)-target(2,1));
+            bPol = hypot(obj.magFieldX(target(1,:),target(2,:)),...
+                         obj.magFieldY(target(1,:),target(2,:)));
+            syms x y
+            symBPol = sqrt((obj.symMagFieldX)^2 + (obj.symMagFieldY)^2);
+            symdBPol= cos(theta)*diff(symBPol,'x') + sin(theta)*diff(symBPol,'y');
+            dbPoldr = double(subs(symdBPol,{'x','y'},{target(1,:),target(2,:)}));
+            dqdr = 1./(obj.R*bPol) - r./(obj.R*bPol.^2).*dbPoldr;
+            if skpf
+                r = r(2:end);
+                dqdr = dqdr(2:end);
+            end
+            q = r./s.*dqdr;
+        end
+        
+        function [q,p] = avgMagShear(obj,npts,target,nrmd,skpf,units)
+            q=0;p=0;
         end
         
     end
