@@ -17,11 +17,14 @@ classdef mConf < matlab.mixin.SetGet & handle
     end
     
     properties(Dependent)
+        a
+        triangularity
         psi95
         separatrixPsiTol
     end
     
     properties(Access=private)
+        magR
         old_bx, old_by
     end
     
@@ -62,6 +65,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
             obj.lcfsDetec;
+            % Compute geometrical properties
+            obj.computeMagR;
             % Find core location
             obj.coreDetec;
             % Remember last commit's magnetic structure
@@ -183,6 +188,19 @@ classdef mConf < matlab.mixin.SetGet & handle
             p = uniquetol(obj.separatrixPsi,1e-10);
         end
         
+        function a = get.a(obj)
+            assert(~isempty(obj.magR));
+            a = (obj.magR.Rmax - obj.magR.Rmin)/2;
+        end
+        
+        function t = get.triangularity(obj)
+            assert(~isempty(obj.magR));
+            triUpper = (obj.magR.Rgeo - obj.magR.Rupper)/obj.a;
+            triLower = (obj.magR.Rgeo - obj.magR.Rlower)/obj.a;
+            tri      = (triUpper+triLower)/2;
+            t = struct('mean',tri,'upper',triUpper,'lower',triLower);
+        end
+        
     end
     
     methods(Access=private)
@@ -220,6 +238,35 @@ classdef mConf < matlab.mixin.SetGet & handle
             S = removeOpenContours(S);
             % Maximum available value of Psi must be LCFS
             obj.lcfsPsi = max(S.level)+psiOffset;
+        end
+        
+        function computeMagR(obj)
+            % Finds a contour close to the LCFS and gathers
+            % R_max,min,upper,lower,geo and a.
+            assert(~isempty(obj.lcfsPsi));
+            psiOffset = 1e-2;
+            targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
+            contour_resolution = 0.75;
+            Lx = obj.simArea(1,2) - obj.simArea(1,1);
+            Ly = obj.simArea(2,2) - obj.simArea(2,1);
+            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
+            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
+            [CX,CY] = meshgrid(cx,cy);
+            C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+            S = extract_contourc(C);
+            S = removeOpenContours(S);
+            assert(numel(S)==1);
+            xmax = max(S(1).x); [~,iymax] = max(S(1).y);
+            xmin = min(S(1).x); [~,iymin] = min(S(1).y);
+            ymax = S(1).x(iymax);
+            ymin = S(1).x(iymin);
+            Rmax = obj.R + xmax - Lx/2;
+            Rmin = obj.R + xmin - Lx/2;
+            Rupper = obj.R + ymax - Lx/2;
+            Rlower = obj.R + ymin - Lx/2;
+            Rgeo   = (Rmax + Rmin)/2;
+            obj.magR = struct('Rmax',Rmax,'Rmin',Rmin,'Rupper',Rupper,...
+                'Rlower',Rlower,'Rgeo',Rgeo);
         end
         
         function xPointDetec(obj,varargin)
