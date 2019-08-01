@@ -498,7 +498,45 @@ classdef mConf < matlab.mixin.SetGet & handle
         end
         
         function [q,p] = avgMagShear(obj,npts,target,nrmd,skpf,units)
-            q=0;p=0;
+            % TODO - Fix ugly signature in mConf.safetyFactor
+            assert(~isempty(obj.corePosition))
+            [~,p] = obj.avgSafetyFactor(npts,target,nrmd,skpf,units);
+            target = [linspace(obj.corePosition(1),target(1),npts);...
+                      linspace(obj.corePosition(2),target(2),npts)];
+            % Get closed contours on target points
+            contour_resolution = 0.75;
+            Lx = obj.simArea(1,2) - obj.simArea(1,1);
+            Ly = obj.simArea(2,2) - obj.simArea(2,1);
+            cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
+            cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
+            [CX,CY] = meshgrid(cx,cy);
+            targetPsi = obj.fluxFx(target(1,:),target(2,:));
+            C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+            S = extract_contourc(C);
+            S = removeOpenContours(S);
+            % Remove core contour if needed
+            psiCore = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
+            if S(1).level==psiCore && skpf
+                S = S(2:end);
+            end
+            syms x y dx dy
+            symBPol = sqrt((obj.symMagFieldX)^2 + (obj.symMagFieldY)^2);
+            symdBPol= dx*diff(symBPol,'x') + dy*diff(symBPol,'y');
+            fdBPol = matlabFunction(symdBPol,'Vars',{x,y,dx,dy});
+            % Compute average dqdr on all these contours
+            q = zeros(size(S));
+            for i=1:numel(S)
+                ss = S(i);
+                r = hypot(ss.x-target(1,1), ss.y-target(2,1));
+                dx = ss.x-target(1,1);
+                dy = ss.y-target(2,1);
+                dd = hypot(dx,dy);
+                dx = dx ./ dd; dy = dy ./ dd;
+                bPol = hypot(obj.magFieldX(ss.x,ss.y),obj.magFieldY(ss.x,ss.y));
+                dbPoldr = fdBPol(ss.x,ss.y,dx,dy);
+                dqdr = 1./(obj.R*bPol)-r./(obj.R*bPol.^2).*dbPoldr;
+                q(i) = mean( obj.R*bPol.*dqdr );
+            end
         end
         
     end
