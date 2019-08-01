@@ -342,9 +342,8 @@ classdef mConf < matlab.mixin.SetGet & handle
             elseif strcmp(units,'psi')
                 p = obj.fluxFx(target(1,:),target(2,:));
                 if nrmd
-                    psiLCFS = min(obj.separatrixPsiTol);
                     psiCore = obj.fluxFx(obj.corePosition(1), obj.corePosition(2));
-                    p = sqrt( (p-psiCore)/(psiLCFS-psiCore) );
+                    p = sqrt( (p-psiCore)/(obj.lcfsPsi-psiCore) );
                 end
             end
         end
@@ -367,7 +366,6 @@ classdef mConf < matlab.mixin.SetGet & handle
             S = removeOpenContours(S);
             % Remove core contour if needed
             psiCore = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
-            psiLCFS = min(obj.separatrixPsiTol);
             if S(1).level==psiCore && skpf
                 S = S(2:end);
             end
@@ -388,7 +386,7 @@ classdef mConf < matlab.mixin.SetGet & handle
                     % TODO - Normaliye by a
                 end
             elseif strcmp(units,'psi') && nrmd
-                p = sqrt( (p-psiCore) / (psiLCFS-psiCore) );
+                p = sqrt( (p-psiCore) / (obj.lcfsPsi-psiCore) );
             end
         end
         
