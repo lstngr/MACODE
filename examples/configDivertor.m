@@ -17,6 +17,7 @@ divertor = currentWire(0,-10,0.5,plasma);
 % Group currents and blabla
 clear config
 config = mConf(R, [plasma,divertor]);
+config.simArea = [-50,50;-20,120];
 
 %% Plots the resulting configuration
 % Same as with currents, watch
@@ -34,13 +35,13 @@ axis image
 
 %% Commit the configuration
 % Commiting runs a computation of x-point locations etc.
-config.commit()
+config.commit(1)
 disp('X-Point location:')
 disp(config.xpoints)
 
 hold(ax,'on')
 contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi,...
     'Parent',ax)
-scatter(config.xpoints(1),config.xpoints(2),40,'or','filled')
+scatter(config.xpoints(:,1),config.xpoints(:,2),40,'or','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold(ax,'off')

@@ -165,7 +165,7 @@ classdef mConf < matlab.mixin.SetGet
         function p = get.psi95(obj)
             assert(~isempty(obj.separatrixPsi));
             assert(~isempty(obj.corePosition));
-            sp = unique(obj.separatrixPsi);
+            sp = obj.lcfsPsi;
             cp = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
             p = cp + 0.95*(sp-cp);
         end
@@ -173,6 +173,8 @@ classdef mConf < matlab.mixin.SetGet
         function p = get.separatrixPsiTol(obj)
             % Return separatrix with numerical tolerance
             % TODO - Eventually add a custom tolerance parameter?
+            % NOTE - Relative tolerance is being computed. Use 'DataScale'
+            % to provide absolute difference.
             p = uniquetol(obj.separatrixPsi,1e-8);
         end
         
@@ -279,7 +281,7 @@ classdef mConf < matlab.mixin.SetGet
             % Might have found minimum of Psi, not good
             pts(~isfinite(obj.fluxFx(pts(:,1),pts(:,2))),:) = NaN;
             pts(isnan(pts(:,1)),:) = []; % Remove NaN point
-            pts = unique(pts,'rows'); % Remove duplicate solutions
+            pts = uniquetol(pts,eps(10),'ByRows',true,'DataScale',1); % Remove duplicate solutions
             maxxpt = min(nxpt,size(pts,1));
             obj.xpoints = pts(1:maxxpt,:);
         end
