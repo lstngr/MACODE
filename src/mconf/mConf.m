@@ -228,7 +228,7 @@ classdef mConf < matlab.mixin.SetGet
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
             assert(~isempty(obj.lcfsPsi));
-            psiOffset = 1e-2;
+            psiOffset = 1e-1;
             targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
             contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);
