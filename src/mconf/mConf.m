@@ -62,6 +62,7 @@ classdef mConf < matlab.mixin.SetGet
             defaultNXPoint = +Inf;
             defaultNTrials = 10;
             defaultLimits = obj.simArea;
+            defaultForce = false;
             % Parse inputs
             p = inputParser;
             addOptional(p,'nxpt',defaultNXPoint,...
@@ -70,6 +71,8 @@ classdef mConf < matlab.mixin.SetGet
                 @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
             addParameter(p,'Limits',defaultLimits,...
                 @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
+            addParameter(p,'Force',defaultForce,...
+                @(x)validateattributes(x,{'logical'},{'scalar'}));
             parse(p,varargin{:})
             
             
@@ -78,9 +81,8 @@ classdef mConf < matlab.mixin.SetGet
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
             if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
-                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) )
-                    % TODO - Allow user to force a commit
-                    warning('magnetic structure unchanged since last commit.')
+                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) ) && ~p.Results.Force
+                    warning('magnetic structure unchanged since last commit. You can force the commit with ''Force'',true.')
                     return;
                 end
             end
