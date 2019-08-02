@@ -41,7 +41,7 @@ axis image
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
 [q,p,qavg,pavg] = safetyFactor(config,30,[500,400],sftyOptions{:});
 figure
-ax = plot(p,q);
+plot(p,q);
 figure
 plot(pavg,qavg)
 
