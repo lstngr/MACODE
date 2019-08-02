@@ -15,7 +15,17 @@ addpath( script_path,...                    % Add folders to path
     genpath([script_path,filesep,'examples']))
 
 %% Generate M2HTML documentation for everybody!
+if ~exist([script_path,filesep,'docs'],'dir')
+    mkdir([script_path,filesep,'docs'])
+end
 m2html('mfiles','src','ignoredDir','m2html',...
     'htmldir','docs', 'recursive','on', 'global','on',...
     'graph','on','globalHypertextLinks','on','verbose','off');
+
+examples_path = [script_path,filesep,'examples'];
+demos_path = [script_path,filesep,'docs',filesep,'demos'];
+if ~exist(demos_path,'dir')
+    mkdir(demos_path)
+end
+publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
 end
