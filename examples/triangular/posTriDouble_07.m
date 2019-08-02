@@ -40,14 +40,30 @@ axis image
 %% Compute safety factor
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
 [q,p,qavg,pavg] = safetyFactor(config,30,[600,400],sftyOptions{:});
-figure
-plot(p,q);
-figure
-plot(pavg,qavg)
+figure('Name','Safety Factor (+0.7)','NumberTitle','off',...
+    'FileName','SF+0.7.fig','Position',[10 10 1000 420])
+subplot(1,2,1)
+plot(p,q,'DisplayName','\delta=+0.7');
+xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
+ylabel('$q=\frac{r}{RB_\theta}$',latexParam{:})
+title('Local Safety Factor')
+subplot(1,2,2)
+plot(pavg,qavg,'DisplayName','\delta=+0.7')
+xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
+ylabel('$\langle q\rangle=\langle\frac{r}{RB_\theta}\rangle$',latexParam{:})
+title('Average Safety Factor')
 
 %% Compute magnetic shear
 [q,p,qavg,pavg] = magShear(config,30,[600,400],sftyOptions{:});
-figure
-ax = plot(p,q);
-figure
-plot(pavg,qavg)
+figure('Name','Magnetic Shear (+0.7)','NumberTitle','off',...
+    'FileName','MS+0.7.fig','Position',[10 10 1000 420])
+subplot(1,2,1)
+plot(p,q,'DisplayName','\delta=+0.7');
+xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
+ylabel('$s=\frac{r}{q}\frac{\mathrm{d}q}{\mathrm{d}r}$',latexParam{:})
+title('Local Magnetic Shear')
+subplot(1,2,2)
+plot(pavg,qavg,'DisplayName','\delta=+0.7')
+xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
+ylabel('$\langle s\rangle=\langle\frac{r}{q}\frac{\mathrm{d}q}{\mathrm{d}r}\rangle$',latexParam{:})
+title('Average Magnetic Shear')
