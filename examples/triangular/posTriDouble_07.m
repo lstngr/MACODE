@@ -39,14 +39,14 @@ axis image
 
 %% Compute safety factor
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
-[q,p,qavg,pavg] = safetyFactor(config,30,[500,400],sftyOptions{:});
+[q,p,qavg,pavg] = safetyFactor(config,30,[600,400],sftyOptions{:});
 figure
 plot(p,q);
 figure
 plot(pavg,qavg)
 
 %% Compute magnetic shear
-[q,p,qavg,pavg] = magShear(config,30,[500,400],sftyOptions{:});
+[q,p,qavg,pavg] = magShear(config,30,[600,400],sftyOptions{:});
 figure
 ax = plot(p,q);
 figure
