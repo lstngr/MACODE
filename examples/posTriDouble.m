@@ -15,7 +15,7 @@ xplasma = 0.4;
 divertx = 0.375 + xplasma;
 
 iPlasma = 20;
-sgmPlasma = 90;
+sgmPlasma = 80;
 propDiv = 1.2;
 
 plasma   = currentGaussian((1-xplasma)*Lx,1/2*Ly,iPlasma,sgmPlasma);
@@ -39,14 +39,14 @@ axis image
 
 %% Compute safety factor
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
-[q,p,qavg,pavg] = safetyFactor(config,30,[500,400],sftyOptions{:});
+[q,p,qavg,pavg] = safetyFactor(config,30,[520,400],sftyOptions{:});
 figure
 plot(p,q);
 figure
 plot(pavg,qavg)
 
 %% Compute magnetic shear
-[q,p,qavg,pavg] = magShear(config,30,[500,400],sftyOptions{:});
+[q,p,qavg,pavg] = magShear(config,30,[520,400],sftyOptions{:});
 figure
 ax = plot(p,q);
 figure
