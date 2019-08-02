@@ -4,9 +4,7 @@ classdef currentWire < current
         function obj=currentWire(x,y,c,varargin)
             obj@current(x,y,c,varargin{:});
         end
-    end
-    
-    methods(Access=public)
+        
         function bx = magFieldX(obj,x,y)
             assert(isequal(size(x),size(y)));
             dx = x - obj.x;

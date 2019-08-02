@@ -1,5 +1,3 @@
-% MCONF     Tokamak Magnetic Configuration
-
 % TODO - Could implement domain scaling
 classdef mConf < matlab.mixin.SetGet
     % MCONF     Tokamak Magnetic Configuration
@@ -45,11 +43,16 @@ classdef mConf < matlab.mixin.SetGet
         function set.currents(obj,curs)
             assert(all(arrayfun(@(x)isa(x,'current'),curs) & isvalid(curs)),...
                 'Expected argument to be a valid array of current handles.');
-            % TODO - Check parent and children for non included currents in
-            % curs!
-            % TODO - Check if this line is really needed. Would also need
-            % to consider ALL currents...
-            assert(sum([curs(:).isPlasma])<2,'Expected at most one plasma current.')
+            for cur=curs
+                if ~isempty(cur.Parent)
+                    % If parent provided, expect to find it in the
+                    % configuration. Else, warn user.
+                    if ~(any(cur.Parent,curs))
+                        warning('Parent was not found.')
+                    end
+                end
+            end
+            assert(sum([curs(:).isPlasma])==1,'Expected at exactly one plasma current.')
             obj.currents = curs;
         end
         
@@ -154,7 +157,7 @@ classdef mConf < matlab.mixin.SetGet
         function p = get.separatrixPsiTol(obj)
             % Return separatrix with numerical tolerance
             % TODO - Eventually add a custom tolerance parameter?
-            p = uniquetol(obj.separatrixPsi,1e-10);
+            p = uniquetol(obj.separatrixPsi,1e-8);
         end
         
         function a = get.a(obj)

@@ -1,6 +1,6 @@
 classdef currentGaussian < current
     
-    properties
+    properties(GetAccess=public,SetAccess=private)
         sigma
     end
     
@@ -10,8 +10,12 @@ classdef currentGaussian < current
             obj@current(x,y,c,varargin{:});
             obj.sigma = s;
         end
-    end
-    methods(Access=public)
+        
+        function set.sigma(obj,s)
+            validateattributes(s,{'double'},{'scalar'})
+            obj.sigma = s;
+        end
+        
         function bx = magFieldX(obj,x,y)
             assert(isequal(size(x),size(y)));
             dx = x - obj.x;

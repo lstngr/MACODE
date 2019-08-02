@@ -35,7 +35,6 @@ end
 end
 
 function [q,p] = localSafetyFactor(obj,npts,target,nrmd,skpf,units)
-% TODO - Fix ugly signature in mConf.safetyFactor
 assert(~isempty(obj.corePosition))
 assert(~isequal(target,obj.corePosition))
 target = [linspace(obj.corePosition(1),target(1),npts);...
@@ -64,7 +63,6 @@ end
 end
 
 function [q,p] = avgSafetyFactor(obj,npts,target,nrmd,skpf,units)
-% TODO - Fix ugly signature in mConf.safetyFactor
 assert(~isempty(obj.corePosition))
 target = [linspace(obj.corePosition(1),target(1),npts);...
     linspace(obj.corePosition(2),target(2),npts)];

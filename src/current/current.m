@@ -1,5 +1,3 @@
-% TODO - Add setters control of input
-
 classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     
     properties(GetAccess=public,SetAccess=private)
@@ -57,22 +55,27 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
         end
         
         function set.x(obj,x)
+            validateattributes(x,{'double'},{'scalar'})
             obj.x = x;
         end
         
         function set.y(obj,y)
+            validateattributes(y,{'double'},{'scalar'})
             obj.y = y;
         end
         
         function set.isPlasma(obj,p)
+            validateattributes(p,{'logical'},{'scalar'})
             obj.isPlasma = p;
         end
         
         function set.c(obj,c)
+            validateattributes(c,{'double'},{'scalar'})
             obj.c = c;
         end
         
         function set.curr(obj,c)
+            validateattributes(c,{'double'},{'scalar'})
             obj.c = c;
         end
         
