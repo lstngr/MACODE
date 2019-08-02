@@ -25,7 +25,6 @@ classdef mConf < matlab.mixin.SetGet
     
     properties(Dependent)
         a
-        triangularity
         psi95
         separatrixPsiTol
     end
@@ -161,14 +160,6 @@ classdef mConf < matlab.mixin.SetGet
         function a = get.a(obj)
             assert(~isempty(obj.magR));
             a = (obj.magR.Rmax - obj.magR.Rmin)/2;
-        end
-        
-        function t = get.triangularity(obj)
-            assert(~isempty(obj.magR));
-            triUpper = (obj.magR.Rgeo - obj.magR.Rupper)/obj.a;
-            triLower = (obj.magR.Rgeo - obj.magR.Rlower)/obj.a;
-            tri      = (triUpper+triLower)/2;
-            t = struct('mean',tri,'upper',triUpper,'lower',triLower);
         end
         
     end
