@@ -47,7 +47,7 @@ classdef mConf < matlab.mixin.SetGet
                 if ~isempty(cur.Parent)
                     % If parent provided, expect to find it in the
                     % configuration. Else, warn user.
-                    if ~(any(cur.Parent,curs))
+                    if ~(any(ismember(cur.Parent,curs)))
                         warning('Parent was not found.')
                     end
                 end
@@ -57,6 +57,22 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function commit(obj,varargin)
+            
+            % Define default parameters
+            defaultNXPoint = +Inf;
+            defaultNTrials = 10;
+            defaultLimits = obj.simArea;
+            % Parse inputs
+            p = inputParser;
+            addOptional(p,'nxpt',defaultNXPoint,...
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+            addOptional(p,'ntri',defaultNTrials,...
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+            addParameter(p,'Limits',defaultLimits,...
+                @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
+            parse(p,varargin{:})
+            
+            
             % Commit configuration as it is loaded and compute stuff
             syms x y
             symBx = obj.symMagFieldX;
@@ -68,7 +84,7 @@ classdef mConf < matlab.mixin.SetGet
                     return;
                 end
             end
-            obj.xPointDetec(varargin{:});
+            obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
             % Psi Separatrix and LCFS
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
@@ -233,62 +249,15 @@ classdef mConf < matlab.mixin.SetGet
                 'Rlower',Rlower,'Rgeo',Rgeo);
         end
         
-        function xPointDetec(obj,varargin)
-            % Detect x points
-            
-            % Call signature
-            %   xPointDetec, xpoints detected within the coils only
-            %   xPointDetec(nxpt), returns at most nxpt (found within 10
-            %   trials)
-            %   xPointDetec(nxpt,ntrials), returns at most nxpt (found
-            %   within ntrials trials)
-            %   xPointDetec(guesses), finds x-points with initial guesses
-            %   xPointDetec(...,'Limits',lims), 2x2 matrix with limits to
-            %   consider.
-            % In all cases, returned x-points are unique, and found via
-            % vpasolve using randomized behavior.
-            
-            % Define default parameters
-            defaultNXPoint = +Inf;
-            defaultNTrials = 10;
-            defaultGuesses = [];
-            defaultLimits = obj.simArea;
-            % Parse inputs
-            p = inputParser;
-            addOptional(p,'nxpt',defaultNXPoint,...
-                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
-            addOptional(p,'ntri',defaultNTrials,...
-                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
-            addOptional(p,'guesses',defaultGuesses,...
-                @(x)validateattributes(x,{'numeric'},{'2d','ncols',2}));
-            addParameter(p,'Limits',defaultLimits,...
-                @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
-            parse(p,varargin{:})
-            
-            % Make sure limits are compatible
-            solve_lims = p.Results.Limits;
-            if ~isempty(p.Results.guesses)
-                guess_lims = [ min(p.Results.guesses(:,1)),...
-                    max(p.Results.guesses(:,1)),...
-                    min(p.Results.guesses(:,2)),...
-                    max(p.Results.guesses(:,2)) ];
-                lim_diff = solve_lims - guess_lims;
-                lim_diff(:,1) = -lim_diff(:,1); % Minimum column difference reversed
-                lim_outside = lim_diff < 0;
-                if any(lim_outside)
-                    warning('guess found outside solving area. Extending domain.')
-                    solve_lims(lim_outside) = guess_lims(lim_outside);
-                end
-            end
-            
+        function xPointDetec(obj,nxpt,ntri,solve_lims)
             % Load symbolic field functions
             syms x y
             % Trials to find x-points
-            pts = zeros(p.Results.ntri,2);
+            pts = zeros(ntri,2);
             diffxx =  diff(obj.symMagFieldX,y);
             diffyy = -diff(obj.symMagFieldY,x);
             diffxy = diff(obj.symMagFieldX,x); % d2psidxdy
-            for i=1:p.Results.ntri
+            for i=1:ntri
                 sol = vpasolve( [obj.symMagFieldX==0,obj.symMagFieldY==0],...
                                 [x,y], solve_lims,'random',true);
                 if numel(sol.x)==1
@@ -311,7 +280,7 @@ classdef mConf < matlab.mixin.SetGet
             pts(~isfinite(obj.fluxFx(pts(:,1),pts(:,2))),:) = NaN;
             pts(isnan(pts(:,1)),:) = []; % Remove NaN point
             pts = unique(pts,'rows'); % Remove duplicate solutions
-            maxxpt = min(p.Results.nxpt,size(pts,1));
+            maxxpt = min(nxpt,size(pts,1));
             obj.xpoints = pts(1:maxxpt,:);
         end
         
