@@ -11,19 +11,21 @@ y  = linspace(0,Ly,ny);
 [X,Y] = meshgrid(x,y);
 R = 700;
 
-xplasma = 0.4;
-divertx = 0.3 + xplasma;
-divertx2= 0.75 + xplasma;
+scanp = 1.0;
+
+xplasma = 0.5 + 0.05*scanp; %0.4
+divertx = 0.5 - 0.25*scanp;% 0.3 + xplasma;
+divertx2= 1.2; %0.75 + xplasma;
 divertx3= divertx;
-divertx4= xplasma-0.65;
+divertx4= -0.2; %xplasma-0.65;
 hxpt = 180;
 
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
 propDiv = 1.0;
-propDiv2= -0.55;
-propDiv3= 0.55;
-propDiv4= 0.1;
+propDiv2= double(scanp<0)*-0.55+double(scanp>0)*0.1;
+propDiv3= 0.55*abs(scanp);
+propDiv4= double(scanp<0)*0.1-double(scanp>0)*0.55;
 
 plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 plasma.isPlasma = true;
@@ -51,30 +53,30 @@ axis image
 %% Compute safety factor
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
 [q,p,qavg,pavg] = safetyFactor(config,30,[500,400],sftyOptions{:});
-figure('Name','Safety Factor (-0.5)','NumberTitle','off',...
-    'FileName','SF-0.5.fig','Position',[10 10 1000 420])
+figure('Name',['Safety Factor (p=',num2str(scanp),')'],'NumberTitle','off',...
+    'FileName',['SF',num2str(scanp),'.fig'],'Position',[10 10 1000 420])
 subplot(1,2,1)
-plot(p,q,'DisplayName','\delta=-0.5');
+plot(p,q,'DisplayName',['\delta=',num2str(triangularity(config))]);
 xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
 ylabel('$q=\frac{r}{RB_\theta}$',latexParam{:})
 title('Local Safety Factor')
 subplot(1,2,2)
-plot(pavg,qavg,'DisplayName','\delta=-0.5')
+plot(pavg,qavg,'DisplayName',['\delta=',num2str(triangularity(config))])
 xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
 ylabel('$\langle q\rangle=\langle\frac{r}{RB_\theta}\rangle$',latexParam{:})
 title('Average Safety Factor')
 
 %% Compute magnetic shear
 [q,p,qavg,pavg] = magShear(config,30,[500,400],sftyOptions{:});
-figure('Name','Magnetic Shear (-0.5)','NumberTitle','off',...
-    'FileName','MS-0.5.fig','Position',[10 10 1000 420])
+figure('Name',['Magnetic Shear (p=',num2str(scanp),')'],'NumberTitle','off',...
+    'FileName',['MS',num2str(scanp),'.fig'],'Position',[10 10 1000 420])
 subplot(1,2,1)
-plot(p,q,'DisplayName','\delta=-0.5');
+plot(p,q,'DisplayName',['\delta=',num2str(triangularity(config))]);
 xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
 ylabel('$s=\frac{r}{q}\frac{\mathrm{d}q}{\mathrm{d}r}$',latexParam{:})
 title('Local Magnetic Shear')
 subplot(1,2,2)
-plot(pavg,qavg,'DisplayName','\delta=-0.5')
+plot(pavg,qavg,'DisplayName',['\delta=',num2str(triangularity(config))])
 xlabel('$\rho=\sqrt{\frac{\psi-\psi_0}{\psi_{\mathrm{LCFS}}-\psi_0}}$',latexParam{:})
 ylabel('$\langle s\rangle=\langle\frac{r}{q}\frac{\mathrm{d}q}{\mathrm{d}r}\rangle$',latexParam{:})
 title('Average Magnetic Shear')
