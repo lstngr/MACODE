@@ -1,26 +1,59 @@
 classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
+    % CURRENT   Object describing an electrical current
+    %   This abstract superclass constitutes the base class for one dimensional
+    %   current objects. Such objects must be described by (at least) a
+    %   position in two dimensional space, and an electrical current value.
+    %   It provides magnetic field expressions, as well as poloidal flux
+    %   functions handles.
     
     properties(GetAccess=public,SetAccess=private)
-        x = 0;
-        y = 0;
+        x = 0; % Position of the current on the x-axis
+        y = 0; % Position of the current on the y-axis
+        
+        % PARENT - Handle to a parent current
+        % This variable stores a handle to another current object. When not
+        % empty, the current value of the class is computed as a fraction
+        % of the parent's current.
         Parent = currentWire.empty();
+        
+        % CHILDREN - Array of handle to child currents
+        % If a current has a non-empty parent handle, then, the parent
+        % handle contains this current in its CHILDREN array.
         Children = currentWire.empty();
     end
     
     properties(Access=public)
-        isPlasma = false;
+        isPlasma = false; % Property is true if the current is a plasma current
     end
     
     properties(Dependent,Access=public)
+        % CURR - Value of the electrical current
+        % This property is computed in dependence of a parent being set or
+        % not. This distinction is however not relevant for a typical user.
         curr
     end
     
     properties(Access=protected)
+        % C - Low-level current
+        % If the Parent property is empty, C is the value of the electrical
+        % current. If Parent is set, C act as a multiplicative factor to
+        % the parent's current when the object's curr property is
+        % requested.
         c = 1;
     end
     
     methods
         function obj = current(x,y,c,varargin)
+            % CURRENT Constructor of the current class
+            %   h = CURRENT(x,y,c) returns a current handle. x and y are
+            %   scalars indicating the current's position. c is the value
+            %   of the electrical current.
+            %
+            %   h = CURRENT(x,y,c,p) returns a current related to the
+            %   current handle p. c now represents a multiplicative factor
+            %   instead of a current. The electrical current is evaluated
+            %   to the parent's current multiplied by c. The Parent and
+            %   Children properties of both h and p are updated.
             narginchk(3,4);
             obj.x = x;
             obj.y = y;
@@ -38,6 +71,13 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
         end
         
         function delete(obj)
+            % DELETE Current destructor
+            %   Destroys the class and updates Parent-Children
+            %   relationships. If the current has children, their parent is
+            %   emptied and their <a href="matlab:doc('current/c')">c</a>
+            %   property is updated to behave independently. If the current
+            %   has a parent, the parent's children array is also updated.
+            
             % Delete parental reference in child wires, and take care of
             % current computation
             for child=obj.Children
@@ -107,8 +147,25 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     end
     
     methods(Abstract,Access=public)
+        % MAGFIELDX X-Component of the magnetic field
+        %   bx = MAGFIELDX(x,y) returns the x-component of the magnetic
+        %   field of the current distribution. x and y are same sized
+        %   numerical variables. The ouput variable, bx, has the same
+        %   size as x and y.
         bx = magFieldX(obj,x,y);
+        
+        % MAGFIELDY Y-Component of the magnetic field
+        %   by = MAGFIELDY(x,y) returns the y-component of the magnetic
+        %   field of the current distribution. x and y are same sized
+        %   numerical variables. The ouput variable, by, has the same
+        %   size as x and y.
         by = magFieldY(obj,x,y);
+        
+        % FLUXFX Poloidal flux function of the current
+        %   flx = FLUXFX(x,y) returns the poloidal magnetic flux function
+        %   of the current distribution. x and y are same sized numerical
+        %   variables. The ouput variable, by, has the same size as x and
+        %   y.
         flx = fluxFx(obj,x,y,R);
     end
     
@@ -121,6 +178,9 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     methods (Static, Sealed, Access = protected)
         function default_object = getDefaultScalarElement
             default_object = currentWire(0,0,0);
+            % Since the current class is abstract, need to define a default
+            % element when building current arrays which is of a concrete
+            % type!
         end
     end
         

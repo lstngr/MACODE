@@ -1,7 +1,18 @@
 classdef currentWire < current
+    % CURRENTWIRE Delta distributed current
+    %   This class provides an infinitely thin (delta function) current
+    %   distribution at the specified location.
     
     methods
         function obj=currentWire(x,y,c,varargin)
+            % CURRENTWIRE Current filament constructor
+            %   h = CURRENTWIRE(x,y,c) constructs an infinitely long
+            %   electrical current filament at cartesian coordinates (x,y)
+            %   with current intensity c and returns a handle h to the
+            %   created current.
+            %
+            %   h = CURRENTWIRE(...,p) uses the current handle p as a
+            %   parent current for h.
             obj@current(x,y,c,varargin{:});
         end
         
