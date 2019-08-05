@@ -8,36 +8,90 @@ classdef mConf < matlab.mixin.SetGet
     %   geometrical properties.
     
     properties(GetAccess=public,SetAccess=private)
-        R
+        R % Tokamak major radius
+        
+        % CURRENTS - Array of current handles
+        % This array contains the currents generating the magnetic
+        % configuration. Although the handle cannot be modified after
+        % construction, one may modify currents directly using their
+        % handles, thus changing the configuration.
         currents = currentWire.empty()
+        
+        % XPOINTS - Coordinates of the x-point(s)
+        % N by 2 array containing the configuration's N x-points
+        % coordinates.
         xpoints
-        separatrixPsi
-        lcfsPsi
-        corePosition
+        
+        separatrixPsi % Values of the flux function evaluated at the x-points
+        lcfsPsi % Values of the flux function at the last closed flux surface
+        corePosition % Position of the center (of the core region)
+        
+        % MAGR - Structure describing the configuration's geometry
+        % This structure holds the fields
+        %
+        % * Rmax: Maximum major radius along the LCFS
+        % * Rmin: Minimum major radius along the LCFS
+        % * Rupper: Major radius at the highest vertical point of the LCFS
+        % * Rlower: Major radius at the lowest  vertical point of the LCFS
+        % * Rgeo: Defined by (Rmin+Rmax)/2
         magR
     end
     
     properties
+        % SIMAREA - Region of interest of the configuration
+        % This region is relevant when a configuration is commit. The
+        % commit process involves calling numerical solving routines to
+        % estimate various quantities (x-point and center locations for
+        % example). If this area isn't adjusted correctly, these routines
+        % will often fail.
         simArea = []
     end
     
     properties(Dependent)
+        % A - Minor radius of the plasma
+        % This parameter is dependent on <a href="matlab:doc('mConf/magR')">mConf/magR</a>
+        %  and computed as (Rmax-Rmin)/2.
         a
+        
+        % PSI95 - Returns 95% of lcfsPsi.
+        % See also lcfsPsi
         psi95
+        
+        % SEPARATRIXPSITOL - Filtered values of the flux function at
+        % x-points For perfectly symmetrical configurations displaying two
+        % or more x-points, it might happen that the property separatrixPsi
+        % holds two values, although the x-points are supposed to lie on
+        % the same flux surface. This is a consequence of the achievable
+        % precision of the numerical solving routines employed during a
+        % commit.
+        %
+        % In cases where having duplicate values of the flux function at
+        % the separatrix is problematic, SEPARATRIXPSITOL can be requested
+        % to filter out duplicate entries in separatrixPsi.
+        %
+        % See also SEPARATRIXPSI
         separatrixPsiTol
     end
     
     properties(Access=private)
-        old_bx, old_by
+        old_bx, old_by % Compared when commit is called. Avoid commiting twice uselessely.
     end
     
     methods
-        function obj = mConf(R,varargin)
-            narginchk(1,2);
+        function obj = mConf(R,c)
+            % MCONF Create a magnetic configuration handle
+            %   h = MCONF(R,c) initializes a magnetic configuration handle
+            %   with major radius R, containing currents c. c is expected
+            %   to be an array of valid current handles.
+            %
+            %   The constructor will throw an error if c doesn't hold
+            %   currents, or if any current handle is invalid. A warning
+            %   will be issued if a current's parent is missing from the
+            %   input array.
+            %
+            %   See also CURRENT
             obj.R = R;
-            if nargin==2
-                obj.currents = varargin{1};
-            end
+            obj.currents = c;
         end
         
         function set.currents(obj,curs)
@@ -57,6 +111,36 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function commit(obj,varargin)
+            % COMMIT Computes properties of a magnetic configuration
+            %   COMMIT(obj) commits the magnetic configuration of mConf
+            %   class instance obj. This method first detects the
+            %   configuration's x-points, computes the flux function at
+            %   those points, identifies which separatrix (if any) is the
+            %   LCFS, finds the center and computes the mConf/magR
+            %   structure. If a previous commit was run, but the magnetic
+            %   configuration hasn't been changed, a warning is issued and
+            %   the computation is stopped.
+            %
+            %   COMMIT(obj,nxpt) does the same as above, but returns at
+            %   most nxpt null points. This option might be useful if the
+            %   detection of duplicate x-points fails, or if the method
+            %   misclassifies some points. Default: +Inf.
+            %
+            %   COMMIT(obj,nxpt,ntri) solves for x-point ntri times with
+            %   random initial conditions. If secondary x-points fail to be
+            %   detected, increasing this parameter may help. Default: 10.
+            %
+            %   COMMIT(...,'Limits',lims) runs the commit method with
+            %   custom boundaries. By default, the object's mConf/simArea
+            %   limits are used.
+            %
+            %   COMMIT(...,'Force',true) performs a full commit even when
+            %   the magnetic structure hasn't been changed. This might be
+            %   useful if the previous commit finished without errors, but
+            %   failed to perform accurately (missing x-point for example).
+            %   Default: false.
+            %
+            %   See also SIMAREA
             
             % Define default parameters
             defaultNXPoint = +Inf;
@@ -101,6 +185,11 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function bx = magFieldX(obj,x,y)
+            % MAGFIELDX X-Component of the magnetic field
+            %   bx = MAGFIELDX(x,y) returns the x-component of the magnetic
+            %   field of the current configuration. x and y are same sized
+            %   numerical variables. The ouput variable, bx, has the same
+            %   size as x and y.
             bx = zeros(size(x));
             for cur=obj.currents
                 bx = bx + cur.magFieldX(x,y);
@@ -108,6 +197,11 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function by = magFieldY(obj,x,y)
+            % MAGFIELDX Y-Component of the magnetic field
+            %   by = MAGFIELDY(x,y) returns the y-component of the magnetic
+            %   field of the current configuration. x and y are same sized
+            %   numerical variables. The ouput variable, by, has the same
+            %   size as x and y.
             by = zeros(size(x));
             for cur=obj.currents
                 by = by + cur.magFieldY(x,y);
@@ -115,14 +209,41 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function gx = gradXFluxFx(obj,x,y)
+            % GRADXFLUXFX X-Component of the flux function's gradient
+            %   gx = GRADXFLUXFX(x,y) returns the x-component of the
+            %   gradient of the poloidal magnetic flux function. x and y
+            %   are same sized numerical variables. The ouput variable, gx,
+            %   has the same size as x and y.
+            %
+            %   Note this method is just a wrapper of the magnetic field's
+            %   y-component since both quantities are proportional by a
+            %   factor -R (major radius).
+            %
+            %   See also mConf/magFieldY
             gx = -obj.R * obj.magFieldY(x,y);
         end
         
         function gy = gradYFluxFx(obj,x,y)
+            % GRADYFLUXFX Y-Component of the flux function's gradient
+            %   gy = GRADYFLUXFX(x,y) returns the y-component of the
+            %   gradient of the poloidal magnetic flux function. x and y
+            %   are same sized numerical variables. The ouput variable, gy,
+            %   has the same size as x and y.
+            %
+            %   Note this method is just a wrapper of the magnetic field's
+            %   x-component since both quantities are proportional by a
+            %   factor R (major radius).
+            %
+            %   See also mConf/magFieldX
             gy =  obj.R * obj.magFieldX(x,y);
         end
         
         function p = fluxFx(obj,x,y)
+            % FLUXFX Poloidal flux function of the configuration
+            %   flx = FLUXFX(x,y) returns the poloidal magnetic flux
+            %   function of the current configuration. x and y are same
+            %   sized numerical variables. The ouput variable, p, has the
+            %   same size as x and y.
             p = zeros(size(x));
             for cur=obj.currents
                 p = p + cur.fluxFx(x,y,obj.R);

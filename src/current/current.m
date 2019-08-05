@@ -164,7 +164,7 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
         % FLUXFX Poloidal flux function of the current
         %   flx = FLUXFX(x,y) returns the poloidal magnetic flux function
         %   of the current distribution. x and y are same sized numerical
-        %   variables. The ouput variable, by, has the same size as x and
+        %   variables. The ouput variable, p, has the same size as x and
         %   y.
         flx = fluxFx(obj,x,y,R);
     end
