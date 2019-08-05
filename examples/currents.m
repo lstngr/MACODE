@@ -78,7 +78,7 @@ box on
 % coils that depend on it!
 %
 % This relationship is implemented in the current class as a Parent-Child
-% model, a structure that is already found in <matlab:web(fullfile(docroot,'matlab/ref/matlab.graphics.axis.axes-properties.html')) Axes Properties> and
+% model, a structure that is already found in <matlab:web(fullfile(docroot,'matlab/ref/axes-properties.html')) Axes Properties> and
 % other graphical objects in MATLAB(R).
 %
 % To create a current that depends on the previously instantiated |wire|

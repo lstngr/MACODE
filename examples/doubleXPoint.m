@@ -25,6 +25,7 @@ divertor2= currentWire(Lx/2,Ly+1/5*Ly,propDiv,plasma);
 % Group currents and blabla
 clear config
 config = mConf(R, [plasma,divertor,divertor2]);
+config.simArea = [0,Lx;0,Ly];
 config.commit(2,6);
 
 figure

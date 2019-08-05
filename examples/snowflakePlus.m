@@ -25,7 +25,7 @@ divertor3= currentWire(Lx/2,-210,propSha,plasma);
 clear config
 config = mConf(R, [plasma,divertor,divertor2,divertor3]);
 config.simArea = [0,Lx;0,Ly];
-config.commit(2);
+config.commit(2,20);
 
 figure
 hold on

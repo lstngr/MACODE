@@ -11,23 +11,23 @@ y  = linspace(0,Ly,ny);
 [X,Y] = meshgrid(x,y);
 R = 700;
 
-xplasma = 0.45;
-divertx = 0.4 + xplasma;
-divertx2= 0.4 + xplasma;
+xplasma = 0.5;
+divertx = 0.3 + xplasma;
+divertx2= 0.45 + xplasma;
 divertx3= 1.2;
 hxpt = 180;
 
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
 propDiv = 1.0;
-propDiv2= 0.3;
-propDiv3= -0.7;
+propDiv2= 0.6;
+propDiv3= -0.6;
 
 plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 plasma.isPlasma = true;
 divertor = currentWire(divertx*Lx,2*hxpt-5/8*Ly,propDiv,plasma);
-divertor2= currentWire(divertx2*Lx,Ly-(2.3*hxpt-5/8*Ly),propDiv2,plasma);
-divertor3= currentWire(divertx3*Lx,9/16*Ly,propDiv3,plasma);
+divertor2= currentWire(divertx2*Lx,Ly-(2*hxpt-5/8*Ly),propDiv2,plasma);
+divertor3= currentWire(divertx3*Lx,4.5/8*Ly,propDiv3,plasma);
 
 clear config
 config = mConf(R, [plasma,divertor,divertor2,divertor3]);

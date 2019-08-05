@@ -28,4 +28,6 @@ if ~exist(demos_path,'dir')
     mkdir(demos_path)
 end
 publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
+publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
+publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
 end
