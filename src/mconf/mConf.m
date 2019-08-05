@@ -91,10 +91,10 @@ classdef mConf < matlab.mixin.SetGet
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
             obj.lcfsDetec;
-            % Compute geometrical properties
-            obj.computeMagR;
             % Find core location
             obj.coreDetec;
+            % Compute geometrical properties
+            obj.computeMagR;
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -239,11 +239,21 @@ classdef mConf < matlab.mixin.SetGet
             C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
             S = extract_contourc(C);
             S = removeOpenContours(S);
+            assert(numel(S)>=1);
+            if(numel(S)>1)
+                % Multiple closed contours, find one enclosing core
+                corein = false(1,numel(S));
+                for is=1:numel(S)
+                    corein(is) = inpolygon(obj.corePosition(1),obj.corePosition(2),...
+                        S(is).x,S(is).y);
+                end
+                S = S(corein);
             assert(numel(S)==1);
-            xmax = max(S(1).x); [~,iymax] = max(S(1).y);
-            xmin = min(S(1).x); [~,iymin] = min(S(1).y);
-            ymax = S(1).x(iymax);
-            ymin = S(1).x(iymin);
+            end
+            xmax = max(S.x); [~,iymax] = max(S.y);
+            xmin = min(S.x); [~,iymin] = min(S.y);
+            ymax = S.x(iymax);
+            ymin = S.x(iymin);
             Rmax = obj.R + xmax - Lx/2;
             Rmin = obj.R + xmin - Lx/2;
             Rupper = obj.R + ymax - Lx/2;
