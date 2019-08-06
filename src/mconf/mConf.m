@@ -116,6 +116,14 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function state = checkCommit(obj)
+            % CHECKCOMMIT Checks if mConf.commit can be called
+            %   s = CHECKCOMMIT(obj) checks if a magnetic configuration can
+            %   be committed, and, in the subsequent case, if a commit is
+            %   needed. The function returns a commitState enumeration
+            %   (which can also be mapped to single precision variables).
+            %
+            %   See also MCONF/COMMIT, COMMITSTATE, SINGLE
+            
             % By default, forbid commit
             state = commitState.NotAvail;
             % Check no symbolic expressions are found
