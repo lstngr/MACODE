@@ -1,5 +1,10 @@
 function S = removeOpenContours( S )
-% Takes an input contour structure array and removes closed contours
+% REMOVEOPENCONTOURS Remove contours with open contour lines
+%   N = REMOVEOPENCONTOURS(S) processes a structure array of contours and
+%   identifies which contours are closed. Open contours are removed from
+%   the returned structure array.
+%
+%   See also EXTRACT_CONTOURC
 
 allxi = arrayfun(@(v)v.x(1),S);
 allxe = arrayfun(@(v)v.x(end),S);

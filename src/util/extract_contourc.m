@@ -1,16 +1,11 @@
 function S = extract_contourc(C)
-% EXTRACT_CONTOURC  Store contours in a cell array
+% EXTRACT_CONTOURC  Store contours in a structure array
 %   S=EXTRACT_CONTOURC(C) processes a 2 rows matrix, C, output by MATLAB's
-%   <a href="matlab:help('contourc')">contourc</a> function into a cell
-%   array holding "contour structures". These structures have fields
-%   'level','x' and 'y'. The contours and their point sare ordered in the
+%   contourc function into a structure array. These structures have fields
+%   'level','x' and 'y'. The contours and their points are ordered in the
 %   same manner as in C.
 %
 %   See also: CONTOURC
-
-% DONE - Using a cell array to store single structures is inefficient.
-% Better to store the output as a structure array directly!
-% TODO - Update description
 
 if(isempty(C))
     return;
