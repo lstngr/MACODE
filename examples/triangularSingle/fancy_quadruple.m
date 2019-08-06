@@ -51,7 +51,7 @@ drawPlot;
         sa = config.simArea;
         cla(ax)
         rectangle('Position',[sa(1),sa(2),sa(3)-sa(1),sa(4)-sa(2)],...
-            'LineStyle','--','Parent',ax)
+            'LineStyle','-','EdgeColor','b','Parent',ax)
         hold(ax,'on')
         cols = lines(length(config.currents)); idx = 1;
         for cur=config.currents
@@ -68,6 +68,7 @@ drawPlot;
     function configUpdate(source,~)
         scanp = source.Value;
         disp(scanp)
+        sld.Value = scanp;
         
         xplasma = 0.5 + 0.05*scanp; %0.4
         divertx = 0.5 - 0.25*scanp;% 0.3 + xplasma;
