@@ -68,7 +68,6 @@ drawPlot;
 
     function configUpdate(source,~)
         scanp = source.Value;
-        disp(scanp)
         sld.Value = scanp;
         
         xplasma = 0.5 + 0.05*scanp; %0.4
@@ -108,14 +107,44 @@ drawPlot;
         divertor4.curr = propDiv4;
         % Commit new config
         title(ax,'WAIT')
+        retryButton.Enable = 'off';
+        resetButton.Enable = 'off';
+        sld.Enable = 'off';
         drawnow;
-        config.commit(1,1)
+        try
+            config.commit(1,1)
+        catch ME
+            retryButton.Enable = 'on';
+            resetButton.Enable = 'on';
+            sld.Enable = 'on';
+            drawPlot
+            rethrow(ME);
+        end
+        retryButton.Enable = 'on';
+        resetButton.Enable = 'on';
+        sld.Enable = 'on';
         drawPlot
     end
 
     function retryCommit(~,~)
         % Commit config again
-        config.commit(1,1)
+        title(ax,'WAIT')
+        retryButton.Enable = 'off';
+        resetButton.Enable = 'off';
+        sld.Enable = 'off';
+        drawnow;
+        try
+            config.commit(1,1,'Force',true)
+        catch ME
+            retryButton.Enable = 'on';
+            resetButton.Enable = 'on';
+            sld.Enable = 'on';
+            drawPlot
+            rethrow(ME);
+        end
+        retryButton.Enable = 'on';
+        resetButton.Enable = 'on';
+        sld.Enable = 'on';
         drawPlot
     end
 
