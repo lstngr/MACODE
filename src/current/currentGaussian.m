@@ -28,7 +28,7 @@ classdef currentGaussian < current
         end
         
         function set.sigma(obj,s)
-            validateattributes(s,{'double'},{'scalar'})
+            validateattributes(s,{'double','sym'},{'scalar'})
             obj.sigma = s;
         end
         

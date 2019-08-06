@@ -95,12 +95,12 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
         end
         
         function set.x(obj,x)
-            validateattributes(x,{'double'},{'scalar'})
+            validateattributes(x,{'double','sym'},{'scalar'})
             obj.x = x;
         end
         
         function set.y(obj,y)
-            validateattributes(y,{'double'},{'scalar'})
+            validateattributes(y,{'double','sym'},{'scalar'})
             obj.y = y;
         end
         
@@ -110,12 +110,12 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
         end
         
         function set.c(obj,c)
-            validateattributes(c,{'double'},{'scalar'})
+            validateattributes(c,{'double','sym'},{'scalar'})
             obj.c = c;
         end
         
         function set.curr(obj,c)
-            validateattributes(c,{'double'},{'scalar'})
+            validateattributes(c,{'double','sym'},{'scalar'})
             obj.c = c;
         end
         
@@ -143,6 +143,36 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
                 parent = parent.Parent;
             end
             curr = prod(currAll);
+        end
+        
+        function f = symMagFieldX(obj)
+            % SYMMAGFIELDX Symbolic expression of the magnetic field
+            %   fx = SYMMSGFIELDX(obj) returns a symbolic expression of the
+            %   x-component of the magnetic field for mConf handle obj,
+            %   with symbolic variables x and y.
+            sx = sym('x','real');
+            sy = sym('y','real');
+            f = obj.magFieldX(sx,sy);
+        end
+        
+        function f = symMagFieldY(obj)
+            % SYMMAGFIELDY Symbolic expression of the magnetic field
+            %   fy = SYMMSGFIELDY(obj) returns a symbolic expression of the
+            %   y-component of the magnetic field for mConf handle obj,
+            %   with symbolic variables x and y.
+            sx = sym('x','real');
+            sy = sym('y','real');
+            f = obj.magFieldY(sx,sy);
+        end
+        
+        function f = symFluxFx(obj,R)
+            % SYMFLUXFX Symbolic expression of the poloidal flux function
+            %   fx = SYMFLUXFX(obj) returns a symbolic expression of the
+            %   poloidal magnetic flux function for mConf handle obj, with
+            %   symbolic variables x and y.
+            sx = sym('x','real');
+            sy = sym('y','real');
+            f = obj.fluxFx(sx,sy,R);
         end
     end
     

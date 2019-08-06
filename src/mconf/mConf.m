@@ -94,6 +94,11 @@ classdef mConf < matlab.mixin.SetGet
             obj.currents = c;
         end
         
+        function set.R(obj,R)
+            validateattributes(R,{'double','sym'},{'scalar'})
+            obj.R = R;
+        end
+        
         function set.currents(obj,curs)
             assert(all(arrayfun(@(x)isa(x,'current'),curs) & isvalid(curs)),...
                 'Expected argument to be a valid array of current handles.');
@@ -255,10 +260,9 @@ classdef mConf < matlab.mixin.SetGet
             %   fx = SYMMSGFIELDX(obj) returns a symbolic expression of the
             %   x-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
-            syms x y
             f = sym(0);
             for cur=obj.currents
-                f = f + cur.magFieldX(x,y);
+                f = f + cur.symMagFieldX;
             end
         end
         
@@ -267,10 +271,9 @@ classdef mConf < matlab.mixin.SetGet
             %   fy = SYMMSGFIELDY(obj) returns a symbolic expression of the
             %   y-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
-            syms x y
             f = sym(0);
             for cur=obj.currents
-                f = f + cur.magFieldY(x,y);
+                f = f + cur.symMagFieldY;
             end
         end
         
@@ -279,10 +282,9 @@ classdef mConf < matlab.mixin.SetGet
             %   fx = SYMFLUXFX(obj) returns a symbolic expression of the
             %   poloidal magnetic flux function for mConf handle obj, with
             %   symbolic variables x and y.
-            syms x y
             f = sym(0);
             for cur=obj.currents
-                f = f + cur.fluxFx(x,y,obj.R);
+                f = f + cur.symFluxFx(obj.R);
             end
         end
         
