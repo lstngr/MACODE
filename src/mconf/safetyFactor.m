@@ -1,4 +1,40 @@
 function varargout = safetyFactor(obj,npts,target,varargin)
+% SAFETYFACTOR Computes a magnetic configuration's safety factor
+%   q = SAFETYFACTOR(obj,n,x) computes the local safety factor for a
+%   magnetic configuration object (mConf) along a straight path extending
+%   from the configuratin's center to the point described by coordinates in
+%   x. npts indicates how many points are sampled. By default, the most
+%   inner point is skipped to avoid numerical errors (this behavior can be
+%   modified, see 'SkipFirst' below).
+%
+%   [q,p] = SAFETYFACTOR(obj,n,x) does the same as above, but returns the
+%   locations at which the safety factor is sampled in units of the flux
+%   function. By default, the distance is normalized to the variable rho
+%   (this behavior can be modified, see 'Normalize' and 'Units' below).
+%
+%   [q,p,qavg,pavg] = SAFETYFACTOR(...) also returns average safety factors
+%   on contours of the poloidal flux function. When pavg is returned in
+%   terms of the flux, each element is the level of the contour. When pavg
+%   is returned in terms of the physical distance, it is the mean of the
+%   contour's points distance to the center (see also 'Units' parameter).
+%
+%   [q,p] = SAFETYFACTOR(...,'SkipFirst',false) includes the center in the
+%   returned safety factor. This value may not relevant as it involves a
+%   division of two doubles close to zero. Default: true.
+%
+%   [q,p] = SAFETYFACTOR(...,'Units',u) returns the variable p using the
+%   unit given in the string u. Units can be 'psi' or 'dist' (the method is
+%   not case sensitive and will complete shortened strings), where 'psi'
+%   returns p in units of the flux function, and 'dist' in terms of a
+%   physical distance.
+%
+%   [q,p] = SAFETYFACTOR(...,'Normalize',false) returns p without
+%   normalizing it. For flux functions units, the returned variable is rho,
+%   and for physical distance units, p is normalized by the plasma's minor
+%   radius a.
+%
+%   See also MCONF
+
 % Check plasma is found
 assert(~isempty(obj.corePosition))
 % Parser defaults
@@ -27,7 +63,7 @@ if skpf
 end
 % Average and local safety factors are computed by two
 % different (private) methods
-nargoutchk(1,4)
+nargoutchk(0,4)
 [varargout{1:2}] = localSafetyFactor(obj,npts,targ,nrmd,skpf,validUnits);
 if nargout>2
     [varargout{3:4}] = avgSafetyFactor(obj,npts,targ,nrmd,skpf,validUnits);

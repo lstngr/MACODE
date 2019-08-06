@@ -1,4 +1,40 @@
 function varargout = magShear(obj,npts,target,varargin)
+% SAFETYFACTOR Computes a magnetic configuration's magnetic shear
+%   s = MAGSHEAR(obj,n,x) computes the local magnetic shear for a
+%   magnetic configuration object (mConf) along a straight path extending
+%   from the configuratin's center to the point described by coordinates in
+%   x. npts indicates how many points are sampled. By default, the most
+%   inner point is skipped to avoid numerical errors (this behavior can be
+%   modified, see 'SkipFirst' below).
+%
+%   [s,p] = MAGSHEAR(obj,n,x) does the same as above, but returns the
+%   locations at which the magnetic shear is sampled in units of the flux
+%   function. By default, the distance is normalized to the variable rho
+%   (this behavior can be modified, see 'Normalize' and 'Units' below).
+%
+%   [s,p,savg,pavg] = MAGSHEAR(...) also returns average magnetic shear
+%   on contours of the poloidal flux function. When pavg is returned in
+%   terms of the flux, each element is the level of the contour. When pavg
+%   is returned in terms of the physical distance, it is the mean of the
+%   contour's points distance to the center (see also 'Units' parameter).
+%
+%   [s,p] = MAGSHEAR(...,'SkipFirst',false) includes the center in the
+%   returned magnetic shear. This value may not relevant as it involves a
+%   division of two doubles close to zero. Default: true.
+%
+%   [s,p] = MAGSHEAR(...,'Units',u) returns the variable p using the
+%   unit given in the string u. Units can be 'psi' or 'dist' (the method is
+%   not case sensitive and will complete shortened strings), where 'psi'
+%   returns p in units of the flux function, and 'dist' in terms of a
+%   physical distance.
+%
+%   [s,p] = MAGSHEAR(...,'Normalize',false) returns p without
+%   normalizing it. For flux functions units, the returned variable is rho,
+%   and for physical distance units, p is normalized by the plasma's minor
+%   radius a.
+%
+%   See also MCONF
+
 % Check plasma is found
 assert(~isempty(obj.corePosition))
 % Parser defaults
@@ -25,7 +61,7 @@ validUnits = validatestring(p.Results.Units,allowedUnits);
 if skpf
     npts = npts + 1;
 end
-% Average and local safety factors are computed by two
+% Average and local magnetic shears are computed by two
 % different (private) methods
 nargoutchk(1,4)
 [varargout{1:2}] = localMagShear(obj,npts,targ,nrmd,skpf,validUnits);
