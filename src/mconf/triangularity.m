@@ -9,7 +9,8 @@ function varargout = triangularity(obj)
 %
 %   See also MCONF
 
-assert(~isempty(obj.magR));
+% Check if commit was done
+assert(obj.checkCommit==commitState.Done)
 nargoutchk(0,3);
 triUpper = (obj.magR.Rgeo - obj.magR.Rupper)/obj.a;
 triLower = (obj.magR.Rgeo - obj.magR.Rlower)/obj.a;

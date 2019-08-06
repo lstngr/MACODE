@@ -127,7 +127,7 @@ classdef mConf < matlab.mixin.SetGet
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
             if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
-                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) ) && ~p.Results.Force
+                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) )
                     state = commitState.Done;
                     return;
                 end
@@ -190,11 +190,12 @@ classdef mConf < matlab.mixin.SetGet
             syms x y
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
-            if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
-                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) ) && ~p.Results.Force
-                    warning('magnetic structure unchanged since last commit. You can force the commit with ''Force'',true.')
-                    return;
-                end
+            state = obj.checkCommit;
+            if state == commitState.Done && ~p.Results.Force
+                warning('magnetic structure unchanged since last commit. You can force the commit with ''Force'',true.')
+                return;
+            elseif state == commitState.NotAvail
+                error('magnetic structure depends on symbolic variables. Commit impossible.')
             end
             obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
             % Psi Separatrix and LCFS
@@ -310,7 +311,7 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function area = get.simArea(obj)
-            if isempty(obj.simArea)
+            if isempty(obj.simArea) && obj.checkCommit ~= commitState.NotAvail
                 area = [min( [obj.currents(:).x] ), ...
                              max( [obj.currents(:).x]);...
                              min( [obj.currents(:).y] ),...

@@ -100,3 +100,7 @@ ylabel('$y$','Fontsize',14,'Interpreter','latex')
 title('Poloidal Flux, $\psi$','Interpreter','latex')
 colorbar
 axis image
+
+%%
+% Note that symbolic configurations cannot be commit.
+config.commit;

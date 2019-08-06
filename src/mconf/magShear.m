@@ -35,8 +35,8 @@ function varargout = magShear(obj,npts,target,varargin)
 %
 %   See also MCONF
 
-% Check plasma is found
-assert(~isempty(obj.corePosition))
+% Check if commit was done
+assert(obj.checkCommit==commitState.Done)
 % Parser defaults
 defaultNormalize = true;
 defaultSkipFirst = true;
