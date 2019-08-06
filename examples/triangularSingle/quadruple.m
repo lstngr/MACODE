@@ -50,6 +50,21 @@ scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
 axis image
 
+figure
+hold on
+sa = config.simArea;
+rectangle('Position',[sa(1),sa(2),sa(3)-sa(1),sa(4)-sa(2)],'LineStyle','--')
+cols = lines(length(config.currents)); idx = 1;
+for cur=config.currents
+    scatter(cur.x,cur.y,75,'o','filled','MarkerFaceColor',cols(idx,:))
+    idx = idx + 1;
+end
+contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
+scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
+scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
+hold off
+axis image
+
 %% Compute safety factor
 sftyOptions = {'Normalize',true,'Units','psi','SkipFirst',true};
 [q,p,qavg,pavg] = safetyFactor(config,30,[500,400],sftyOptions{:});

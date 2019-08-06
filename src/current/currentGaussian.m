@@ -6,7 +6,7 @@ classdef currentGaussian < current
     %   distribution's center, and sig2 the variance. The current
     %   distribution is not normalized by sqrt(2*pi*sig2)!
     
-    properties(GetAccess=public,SetAccess=private)
+    properties
         sigma % Standard deviation of the normal distribution
     end
     

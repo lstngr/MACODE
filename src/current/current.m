@@ -7,9 +7,6 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     %   functions handles.
     
     properties(GetAccess=public,SetAccess=private)
-        x = 0; % Position of the current on the x-axis
-        y = 0; % Position of the current on the y-axis
-        
         % PARENT - Handle to a parent current
         % This variable stores a handle to another current object. When not
         % empty, the current value of the class is computed as a fraction
@@ -23,6 +20,8 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
     end
     
     properties(Access=public)
+        x = 0; % Position of the current on the x-axis
+        y = 0; % Position of the current on the y-axis
         isPlasma = false; % Property is true if the current is a plasma current
     end
     
