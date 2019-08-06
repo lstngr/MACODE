@@ -1,4 +1,4 @@
-%% MAGNCONFIGURATION     Create a Sample Magnetic Configuration Object
+%% Create a Sample Magnetic Configuration Object
 % This demonsration script shows the intialization process of a simple
 % magnetic divertor configuration using the mConf class. Currents are first
 % created, from which the configuration object is instanciated. The
@@ -139,3 +139,5 @@ contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi,...
 scatter(config.xpoints(:,1),config.xpoints(:,2),40,'or','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold(ax,'off')
+
+displayEndOfDemoMessage(mfilename)

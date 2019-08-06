@@ -34,6 +34,14 @@ if ~p.Results.MakeDocs
     % If no documentation is required, exit here
     return;
 end
+
+% Warn about configuration being generated
+waitfor(...
+    msgbox({'Documentation will now be generated.',...
+    'Please wait until all figures figures are closed.'},...
+    'Documentation')...
+    );
+
 if ~exist([script_path,filesep,'docs'],'dir')
     mkdir([script_path,filesep,'docs'])
 end
@@ -49,5 +57,8 @@ end
 publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
+publish([examples_path,filesep,'doubleXPoint.m']  ,'outputDir',demos_path);
 publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
+
+close all
 end

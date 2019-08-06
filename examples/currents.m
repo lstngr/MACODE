@@ -1,4 +1,4 @@
-%% CURRENTS    Create sample currents
+%% Create sample currents
 % CURRENTS is a demonstration script showing how to intialize, use and
 % delete objects deriving from the current class.
 
@@ -210,3 +210,5 @@ disp(child.Parent)
 % Try changing child's current. It behaves independently now.
 child.curr = 10;
 disp(['After update: ',num2str(child.curr)])
+
+displayEndOfDemoMessage(mfilename)

@@ -105,3 +105,5 @@ title('Too few solver tries')
 %
 % (Note: No example plots are generated since this part is too unreliable
 % for the example's publication.)
+
+displayEndOfDemoMessage(mfilename)

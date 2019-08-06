@@ -1,4 +1,4 @@
-%% SIMPLEDIVERTOR    Working with Multiple Currents
+%% Working with Multiple Currents
 % In this script, two currents are created. One, Gaussian, will act as the
 % plasma current, while the other one will act as a filament creating a
 % basic magnetic divertor.
@@ -78,3 +78,5 @@ axis image
 % provided by limiting ouselves to the use of currents.
 % In the next demonstration, we introduce a magnetic configuration class,
 % mConf, which provides such basic functionalities.
+
+displayEndOfDemoMessage(mfilename)

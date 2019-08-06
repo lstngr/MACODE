@@ -1,4 +1,4 @@
-%% SYMBOLICCONFIG Work on Magnetic Configurations with Symbolic Variables
+%% Work on Magnetic Configurations with Symbolic Variables
 % In order to implement a configuration's magnetic structure equations
 % elsewhere (GBS for example), it might be handy to obtain equations where
 % system parameters are displayed as variables. Such parameters could be
@@ -109,6 +109,8 @@ lY = Y(1:step:end,1:step:end);
 % the symbolic toolbox to generate inline function handles. We indicate
 % |matlabFunction| that the handle should have two inputs, being the two
 % coordinates that we did not replace yet.
+x = sym('x','real');
+y = sym('y','real');
 hbx = matlabFunction(bx,'Vars',[x,y]);
 hby = matlabFunction(by,'Vars',[x,y]);
 
@@ -158,4 +160,11 @@ config.checkCommit
 %
 % In our case, |NotAvail| prevents any commit attempt due to symbolic
 % variables. If you try to commit anyway, an error is thrown.
-config.commit;
+try
+    config.commit;
+catch ME
+    fprintf('\nExpected error occured:\n')
+    disp(getReport(ME))
+end
+
+displayEndOfDemoMessage(mfilename)
