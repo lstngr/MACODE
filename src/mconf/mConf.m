@@ -251,6 +251,10 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function f = symMagFieldX(obj)
+            % SYMMAGFIELDX Symbolic expression of the magnetic field
+            %   fx = SYMMSGFIELDX(obj) returns a symbolic expression of the
+            %   x-component of the magnetic field for mConf handle obj,
+            %   with symbolic variables x and y.
             syms x y
             f = sym(0);
             for cur=obj.currents
@@ -259,6 +263,10 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function f = symMagFieldY(obj)
+            % SYMMAGFIELDY Symbolic expression of the magnetic field
+            %   fy = SYMMSGFIELDY(obj) returns a symbolic expression of the
+            %   y-component of the magnetic field for mConf handle obj,
+            %   with symbolic variables x and y.
             syms x y
             f = sym(0);
             for cur=obj.currents
@@ -267,6 +275,10 @@ classdef mConf < matlab.mixin.SetGet
         end
         
         function f = symFluxFx(obj)
+            % SYMFLUXFX Symbolic expression of the poloidal flux function
+            %   fx = SYMFLUXFX(obj) returns a symbolic expression of the
+            %   poloidal magnetic flux function for mConf handle obj, with
+            %   symbolic variables x and y.
             syms x y
             f = sym(0);
             for cur=obj.currents

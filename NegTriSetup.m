@@ -1,9 +1,20 @@
-function NegTriSetup
+function NegTriSetup(varargin)
 % NEGTRISETUP Sets up the negative triangularity project
 %   NEGTRISETUP makes sure required scripts and paths are added to MATLAB's
 %   userpath, builds the documentation if required, and does other things.
 
 % TODO - Add other things that NEGTRISETUP might do!
+
+%% Parse varargin
+% Defaults
+defaultMakeDocs = false;
+
+% Parser
+p = inputParser;
+addParameter(p,'MakeDocs',defaultMakeDocs,@(x)validateattributes(x,{'logical'},{'scalar'}))
+
+%Processing
+parse(p,varargin{:})
 
 %% Add the negative triangularity project to the userpath
 % Request the current's script location with <matlab:doc('mfilename') mfilename>
@@ -15,6 +26,10 @@ addpath( script_path,...                    % Add folders to path
     genpath([script_path,filesep,'examples']))
 
 %% Generate M2HTML documentation for everybody!
+if ~p.Results.MakeDocs
+    % If no documentation is required, exit here
+    return;
+end
 if ~exist([script_path,filesep,'docs'],'dir')
     mkdir([script_path,filesep,'docs'])
 end
