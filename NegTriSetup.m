@@ -60,5 +60,7 @@ publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'doubleXPoint.m']  ,'outputDir',demos_path);
 publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
 
+% Cleanup
 close all
+evalin('base','clear all')
 end

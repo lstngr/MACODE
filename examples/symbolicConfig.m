@@ -164,7 +164,7 @@ try
     config.commit;
 catch ME
     fprintf('\nExpected error occured:\n')
-    disp(getReport(ME))
+    disp(getReport(ME,'basic'))
 end
 
 displayEndOfDemoMessage(mfilename)
