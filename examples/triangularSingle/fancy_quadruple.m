@@ -32,13 +32,14 @@ divertor4= currentWire(divertx4*Lx,5/8*Ly,propDiv4,plasma);
 
 config = mConf(R, [plasma,divertor,divertor2,divertor3,divertor4]);
 config.simArea = [0,Lx;0,Ly];
-config.commit(1,2)
+config.commit(1,1)
 
 F = figure;
-c = uicontrol;
-c.String = 'scanp=0';
-c.Max = 0;
-c.Callback = @configUpdate;
+set(F,'Position',[50 50 560 693])
+resetButton = uicontrol('Parent',F,'String','scanp=0','Max',0,'Min',0,...
+    'Callback',@configUpdate);
+retryButton = uicontrol('Parent',F,'String','Re-commit','Max',0,'Min',0,...
+    'Position',[200 20 160 20],'Callback',@retryCommit);
 sld = uicontrol('Parent',F,'Style', 'slider',...
         'Min',-1,'Max',1,'Value',0,...
         'Position', [400 20 120 20],...
@@ -62,7 +63,7 @@ drawPlot;
         contour(ax,X,Y,config.fluxFx(X,Y),10,'--k')
         hold(ax,'off')
         axis(ax,'image')
-        title(['scanp=',num2str(scanp)])
+        title(ax,['scanp=',num2str(scanp)])
     end
 
     function configUpdate(source,~)
@@ -106,7 +107,15 @@ drawPlot;
         divertor4.y = 5/8*Ly;
         divertor4.curr = propDiv4;
         % Commit new config
-        config.commit(1,2)
+        title(ax,'WAIT')
+        drawnow;
+        config.commit(1,1)
+        drawPlot
+    end
+
+    function retryCommit(~,~)
+        % Commit config again
+        config.commit(1,1)
         drawPlot
     end
 
