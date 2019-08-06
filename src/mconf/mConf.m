@@ -115,6 +115,27 @@ classdef mConf < matlab.mixin.SetGet
             obj.currents = curs;
         end
         
+        function state = checkCommit(obj)
+            % By default, forbid commit
+            state = commitState.NotAvail;
+            % Check no symbolic expressions are found
+            xr = num2cell(rand(1,2));
+            if isa(obj.magFieldX(xr{:}),'sym') || isa(obj.magFieldY(xr{:}),'sym') || isa(obj.fluxFx(xr{:}),'sym')
+                return;
+            end
+            % Check if previous commit was done
+            symBx = obj.symMagFieldX;
+            symBy = obj.symMagFieldY;
+            if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
+                if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) ) && ~p.Results.Force
+                    state = commitState.Done;
+                    return;
+                end
+            end
+            % If reaching this line, commit can be done
+            state = commitState.Avail;
+        end
+        
         function commit(obj,varargin)
             % COMMIT Computes properties of a magnetic configuration
             %   COMMIT(obj) commits the magnetic configuration of mConf
