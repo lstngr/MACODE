@@ -26,7 +26,7 @@ divertor = currentWire(xc(2),yc(2),cI(2),plasma);
 clear config % Make sure workspace is clean
 config = mConf(R, [plasma,divertor]);
 
-%% Obtain Field Equations from Currents
+%% Obtain Field Equations from the Divertor
 % Other blabla
 
 % Define symbolic "query" variables
@@ -36,7 +36,7 @@ y = sym('y','real');
 % Obtain field equations
 bx = divertor.magFieldX(x,y);
 by = divertor.magFieldY(x,y);
-fx = divertor.fluxFx(x,y);
+fx = divertor.fluxFx(x,y,R);
 
 % Display these
 disp(['Bx = ',char(bx)])
@@ -59,3 +59,44 @@ fx = config.fluxFx(x,y);
 disp(['Bx = ',char(bx)])
 disp(['By = ',char(by)])
 disp(['Fx = ',char(fx)])
+
+%% Substitute Real Values in Symbolic Expressions
+% Final blabla. Discourage using subs for performance.
+% Warn for expint definition etcetc.
+
+% Perform substitutions
+subOld = [xc,yc,cI,sgm,R];
+%subOld = mat2cell(subOld,1,numel(subOld));
+subNew = [0,0,60,-10,1,0.5,4,150];
+bx = subs(bx,subOld,subNew);
+by = subs(by,subOld,subNew);
+fx = subs(fx,subOld,subNew);
+
+% Create meshgrid
+step = 6;
+nx = linspace(-50,50,100);
+ny = linspace(-20,120,120);
+[X,Y] = meshgrid(nx,ny);
+lX = X(1:step:end,1:step:end);
+lY = Y(1:step:end,1:step:end);
+
+% Create function handles to plot the configurations
+hbx = matlabFunction(bx,'Vars',[x,y]);
+hby = matlabFunction(by,'Vars',[x,y]);
+% Create meshgrided flux function
+nfx = subs(vpa(fx),{x,y},{X,Y});
+
+figure('Position',[10 10 968 420])
+subplot(1,2,1)
+quiver(lX,lY,hbx(lX,lY),hby(lX,lY),2)
+xlabel('$x$','Fontsize',14,'Interpreter','latex')
+ylabel('$y$','Fontsize',14,'Interpreter','latex')
+title('Magnetic Field','Interpreter','latex')
+axis image
+ax = subplot(1,2,2);
+contourf(X,Y,nfx,40,'EdgeColor','none')
+xlabel('$x$','Fontsize',14,'Interpreter','latex')
+ylabel('$y$','Fontsize',14,'Interpreter','latex')
+title('Poloidal Flux, $\psi$','Interpreter','latex')
+colorbar
+axis image

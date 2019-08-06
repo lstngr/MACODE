@@ -25,6 +25,10 @@ addpath( script_path,...                    % Add folders to path
     genpath([script_path,filesep,'src']),...
     genpath([script_path,filesep,'examples']))
 
+%% Check for pitfalls
+sExpint = which('expint');
+assert(~isempty(strfind(sExpint,'toolbox/matlab')))
+
 %% Generate M2HTML documentation for everybody!
 if ~p.Results.MakeDocs
     % If no documentation is required, exit here
@@ -45,4 +49,5 @@ end
 publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
+publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
 end
