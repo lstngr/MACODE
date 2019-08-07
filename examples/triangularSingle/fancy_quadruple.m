@@ -4,7 +4,7 @@
 %% Define domain, currents, configuration and plot
 % Like previously
 
-Lx = 600; Ly = 800;
+Lx = 800; Ly = 800;
 nx = 300; ny = 400;
 x  = linspace(0,Lx,nx);
 y  = linspace(0,Ly,ny);
@@ -14,11 +14,17 @@ R = 700;
 %% Negative triangular
 scanp = -1.0;
 
-xplasma = 0.5 + 0.05*scanp;
-divertx = 0.5 - 0.25*scanp;
-divertx2= 1.2;
+% Coefficients have been converted for larger domain
+% if 0.5+0.1*scanp, then dist diff was 0.1*600=60, but now 60/800=0.075
+% if -0.25-0.05*scanp, then dist to center was 0.75*600 = 450, but now
+% 450/800=0.5675.
+% Current need not change
+
+xplasma = 0.5 + 0.0375*scanp;
+divertx = 0.5 - 0.1875*scanp;
+divertx2= 1.0250;
 divertx3= divertx;
-divertx4= -0.2;
+divertx4= -0.0250;
 hxpt = 180;
 
 iPlasma = 14.2857;
@@ -42,11 +48,11 @@ config1.simArea = [0,Lx;0,Ly];
 %% SN
 scanp = 0.0;
 
-xplasma = 0.5 + 0.05*scanp;
-divertx = 0.5 - 0.25*scanp;
-divertx2= 1.2;
+xplasma = 0.5 + 0.0375*scanp;
+divertx = 0.5 - 0.1875*scanp;
+divertx2= 1.0250;
 divertx3= divertx;
-divertx4= -0.2;
+divertx4= -0.0250;
 hxpt = 180;
 
 iPlasma = 14.2857;
@@ -70,11 +76,11 @@ config2.simArea = [0,Lx;0,Ly];
 %% Positive triangular
 scanp = 1.0;
 
-xplasma = 0.5 + 0.05*scanp;
-divertx = 0.5 - 0.25*scanp;
-divertx2= 1.2;
+xplasma = 0.5 + 0.0375*scanp;
+divertx = 0.5 - 0.1875*scanp;
+divertx2= 1.0250;
 divertx3= divertx;
-divertx4= -0.2;
+divertx4= -0.0250;
 hxpt = 180;
 
 iPlasma = 14.2857;

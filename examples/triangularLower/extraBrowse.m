@@ -4,8 +4,8 @@
 %% Define domain, currents, configuration and plot
 % Like previously
 
-Lx = 600; Ly = 800;
-nx = 300; ny = 400;
+Lx = 800; Ly = 800;
+nx = 400; ny = 400;
 x  = linspace(0,Lx,nx);
 y  = linspace(0,Ly,ny);
 [X,Y] = meshgrid(x,y);
@@ -14,10 +14,16 @@ R = 700;
 %% Negative triangular
 scanp = -1;
 
-xplasma = 0.5+0.1*scanp;
-divertx = 0.5-0.25*scanp;
-divertx2= 1.25-0.05*scanp;
-divertx3= -0.25-0.05*scanp;
+% Coefficients have been converted for larger domain
+% if 0.5+0.1*scanp, then dist diff was 0.1*600=60, but now 60/800=0.075
+% if -0.25-0.05*scanp, then dist to center was 0.75*600 = 450, but now
+% 450/800=0.5675.
+% Current need not change
+
+xplasma = 0.5+0.075*scanp;
+divertx = 0.5-0.1875*scanp;
+divertx2= 1.0625-0.0375*scanp;
+divertx3= -0.0625-0.0375*scanp;
 diverty2= 5/8+1/8*scanp;
 diverty3= 5/8-1/8*scanp;
 hxpt = 180;
@@ -41,10 +47,10 @@ config1.simArea = [0,Lx;0,Ly];
 %% SN
 scanp = 0;
 
-xplasma = 0.5+0.1*scanp;
-divertx = 0.5-0.25*scanp;
-divertx2= 1.25-0.05*scanp;
-divertx3= -0.25-0.05*scanp;
+xplasma = 0.5+0.075*scanp;
+divertx = 0.5-0.1875*scanp;
+divertx2= 1.0625-0.0375*scanp;
+divertx3= -0.0625-0.0375*scanp;
 diverty2= 5/8+1/8*scanp;
 diverty3= 5/8-1/8*scanp;
 hxpt = 180;
@@ -68,10 +74,10 @@ config2.simArea = [0,Lx;0,Ly];
 %% Positive triangular
 scanp = 1;
 
-xplasma = 0.5+0.1*scanp;
-divertx = 0.5-0.25*scanp;
-divertx2= 1.25-0.05*scanp;
-divertx3= -0.25-0.05*scanp;
+xplasma = 0.5+0.075*scanp;
+divertx = 0.5-0.1875*scanp;
+divertx2= 1.0625-0.0375*scanp;
+divertx3= -0.0625-0.0375*scanp;
 diverty2= 5/8+1/8*scanp;
 diverty3= 5/8-1/8*scanp;
 hxpt = 180;
