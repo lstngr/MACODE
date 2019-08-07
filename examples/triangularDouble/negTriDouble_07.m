@@ -14,7 +14,7 @@ R = 700;
 xplasma = 0.25;
 divertx = 0.55 + xplasma;
 
-iPlasma = 22.5;
+iPlasma = 21.25;
 sgmPlasma = 85;
 propDiv = 1.2;
 
@@ -27,6 +27,8 @@ clear config
 config = mConf(R, [plasma,divertor,divertor2]);
 config.simArea = [0,Lx;0,Ly];
 config.commit(2);
+
+latexParam = {'Interpreter','latex','Fontsize',14};
 
 figure
 hold on
