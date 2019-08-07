@@ -103,10 +103,12 @@ drawnow;
             resetBt.Enable = 'on';
             updateBt.Enable= 'on';
             pslider.Value = scanp;
-            [m,u,l] = triangularity(obj);
-            trigtxt.String = {['$\delta_{\phantom{upper}}=',num2str(m),'$'],...
-                ['$\delta_{upper}=',num2str(u),'$'],...
-                ['$\delta_{lower}=',num2str(l),'$']};
+            if obj.checkCommit==commitState.Done
+                [m,u,l] = triangularity(obj);
+                trigtxt.String = {['$\delta_{\phantom{upper}}=',num2str(m),'$'],...
+                    ['$\delta_{upper}=',num2str(u),'$'],...
+                    ['$\delta_{lower}=',num2str(l),'$']};
+            end
         end
         drawnow;
     end
@@ -154,6 +156,8 @@ drawnow;
             scatter(ax,obj.currents(iicur).x,obj.currents(iicur).y,75,...
                 'o','filled','MarkerFaceColor',cols(iicur,:))
         end
+        scatter(ax,obj.xpoints(:,1),obj.xpoints(:,2),40,...
+                'o','filled','MarkerFaceColor','w')
         contour(ax,X,Y,obj.fluxFx(X,Y),'-k','LevelList',obj.separatrixPsi)
         contour(ax,X,Y,obj.fluxFx(X,Y),10,'--k')
         hold(ax,'off')
