@@ -120,7 +120,22 @@ cx = linspace(obj.simArea(1,1), obj.simArea(1,2), ceil(Lx*contour_resolution));
 cy = linspace(obj.simArea(2,1), obj.simArea(2,2), ceil(Ly*contour_resolution));
 [CX,CY] = meshgrid(cx,cy);
 targetPsi = obj.fluxFx(target(1,:),target(2,:));
-C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+try
+    C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+catch ME
+    if ~strcmpi(ME.identifier,'MATLAB:contourc:LMustBeFinite')
+        rethrow(ME);
+    end
+    % Else, can find problematic points and see if a limit can be taken.
+    nf = ind2sub(size(targetPsi),find(~isfinite(targetPsi)));
+    xsym = sym('x'); ysym = sym('y');
+    for ip = numel(nf)
+        expr = subs(obj.symFluxFx,xsym,target(1,nf(ip)));
+        expr = limit(expr,ysym,target(2,nf(ip)));
+        targetPsi(nf(ip)) = double(expr);
+    end
+    C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
+end
 S = extract_contourc(C);
 S = removeOpenContours(S);
 % Remove core contour if needed

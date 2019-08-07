@@ -334,6 +334,13 @@ classdef mConf < matlab.mixin.SetGet
             assert(~isempty(obj.corePosition));
             sp = obj.lcfsPsi;
             cp = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
+            % If cp is not defined, try harder
+            if ~isfinite(cp)
+                xsym = sym('x'); ysym = sym('y');
+                cp = double(...
+                    limit(subs(obj.symFluxFx,ysym,obj.corePosition(2))),...
+                    xsym,obj.corePosition(1));
+            end
             p = cp + 0.95*(sp-cp);
         end
         
