@@ -35,6 +35,9 @@ ncur = unique(ncur);
 % Gather current locations and intensities
 x = zeros(ncur,nobj);
 y = x; c = x;
+
+% Need dirty trick to access current.c, explained at:
+% https://undocumentedmatlab.com/blog/accessing-private-object-properties
 warning off MATLAB:structOnObject
 for iconf=1:nobj
     x(:,iconf) = [obj(iconf).currents.x];
@@ -53,23 +56,26 @@ obj = obj(1);
 scanp = 0;
 
 % Initialize command panel
-panelF = figure('Position',[30,50,250,450]);
+panelF = figure('Position',[30,50,250,400]);
 statetxt = uicontrol('Style','text','String','Ready',...
-    'Position',[50,410,150,30],'Fontsize',16,'Parent',panelF);
+    'Position',[50,350,150,30],'Fontsize',16,'Parent',panelF);
 pslider = uicontrol('Style','slider','SliderStep',[0.05,0.2],...
-    'Position',[50,360,150,30],'Min',-1,'Max',1,'Enable','off',...
+    'Position',[50,300,150,30],'Min',-1,'Max',1,'Enable','off',...
     'Callback',@setScanp,'Parent',panelF);
 retryBt = uicontrol('Style','pushbutton','String','Re-commit',...
-    'Position',[50,310,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
+    'Position',[50,250,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
 resetBt = uicontrol('Style','pushbutton','String','Reset','Value',0,'Min',0,'Max',0,...
-    'Position',[50,260,150,30],'Enable','off','Parent',panelF,'Callback',@setScanp);
+    'Position',[50,200,150,30],'Enable','off','Parent',panelF,'Callback',@setScanp);
 updateBt =uicontrol('Style','pushbutton','String','Update','Value',0,'Min',0,'Max',0,...
-    'Position',[50,210,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
+    'Position',[50,150,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
 pvaltxt = uicontrol('Style','text','String',['p=',num2str(scanp)],...
-    'Position',[50,160,150,30],'Fontsize',16,'Parent',panelF);
+    'Position',[50,100,150,30],'Fontsize',16,'Parent',panelF);
+trigtxt = annotation(gcf,'textbox','String',...
+    {'$\delta_{\phantom{upper}}=$','$\delta_{upper}=$','$\delta_{lower}=$'},...
+    'Units','pixels','Position',[50,30,150,60],'Fontsize',12,'Interpreter','latex');
 
 % Initialize plot figure
-plotF = figure('Position',[290,50,250,600]);
+plotF = figure('Position',[290,50,650,600]);
 ax = axes('Parent',plotF);
 axis(ax,'image');
 xlabel(ax,'x');
@@ -97,6 +103,10 @@ drawnow;
             resetBt.Enable = 'on';
             updateBt.Enable= 'on';
             pslider.Value = scanp;
+            [m,u,l] = triangularity(obj);
+            trigtxt.String = {['$\delta_{\phantom{upper}}=',num2str(m),'$'],...
+                ['$\delta_{upper}=',num2str(u),'$'],...
+                ['$\delta_{lower}=',num2str(l),'$']};
         end
         drawnow;
     end
@@ -138,6 +148,7 @@ drawnow;
         hold(ax,'on')
         cols = lines(ncur);
         sa = obj.simArea;
+        contourf(ax,X,Y,obj.fluxFx(X,Y),40,'EdgeColor','none')
         rectangle('Parent',ax,'Position',[sa(1),sa(2),sa(3)-sa(1),sa(4)-sa(2)],'LineStyle','--')
         for iicur=1:ncur
             scatter(ax,obj.currents(iicur).x,obj.currents(iicur).y,75,...
