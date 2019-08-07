@@ -54,6 +54,7 @@ obj = obj(1);
 
 % Initial scan parameter
 scanp = 0;
+oldScanp = 0;
 
 % Initialize command panel
 panelF = figure('Position',[30,50,250,400]);
@@ -62,6 +63,7 @@ statetxt = uicontrol('Style','text','String','Ready',...
 pslider = uicontrol('Style','slider','SliderStep',[0.05,0.2],...
     'Position',[50,300,150,30],'Min',-1,'Max',1,'Enable','off',...
     'Callback',@setScanp,'Parent',panelF);
+addlistener(pslider, 'Value', 'PostSet', @(src,evnt)setScanp(pslider));
 retryBt = uicontrol('Style','pushbutton','String','Re-commit',...
     'Position',[50,250,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
 resetBt = uicontrol('Style','pushbutton','String','Reset','Value',0,'Min',0,'Max',0,...
@@ -131,9 +133,12 @@ drawnow;
         end
         drawConfig;
         lockPanel(false);
+        oldScanp = scanp;
     end
 
     function retryCommit(~,~)
+        pslider.Value = oldScanp;
+        setScanp(pslider);
         lockPanel(true);
         try
             obj.commit(ntry,ntry,'Force',true);
