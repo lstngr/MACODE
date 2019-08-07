@@ -29,4 +29,4 @@ for iconf=1:numel(scanp)
 end
 clear tmpConfig
 
-configBrowser(confs,scanp,4)
+config = configBrowser(confs,scanp,4);

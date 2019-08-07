@@ -1,4 +1,4 @@
-function configBrowser(obj,varargin)
+function activeConf = configBrowser(obj,varargin)
 
 narginchk(1,3);
 assert(isa(obj,'mConf'))
@@ -90,6 +90,7 @@ gy  = linspace(obj.simArea(2),obj.simArea(4),ny);
 % Commit beautiful object
 updateConfig;
 drawnow;
+activeConf = obj;
 
     function lockPanel(toggle)
         if toggle

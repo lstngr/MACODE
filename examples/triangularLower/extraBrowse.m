@@ -93,8 +93,8 @@ config3 = mConf(R, [c3plasma,c3divertor,c3divertor2,c3divertor3]);
 config3.simArea = [0,Lx;0,Ly];
 
 %% Browse configurations
-configBrowser([config1,config2,config3],-1:1,2);
-clear config2 config3
+config = configBrowser([config1,config2,config3],-1:1,2);
+clear config1 config2 config3
 
 % Properties of the displayed configuration can be queried from the
 % 'config' variable. The configBrowser function modifies the config1
