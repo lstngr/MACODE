@@ -23,9 +23,9 @@ hxpt = 180;
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
 propDiv = 1.0;
-propDiv2= double(scanp<0)*-0.55+double(scanp>0)*0.1;
+propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
 propDiv3= 0.55*abs(scanp);
-propDiv4= double(scanp<0)*0.1-double(scanp>0)*0.55;
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
 
 plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 plasma.isPlasma = true;
