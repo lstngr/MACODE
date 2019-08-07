@@ -1,4 +1,8 @@
-function fancy_quadruple
+%% NEGTRIDOUBLE     Full double x-point negative triangular configuration
+% YEAYEAYEA
+
+%% Define domain, currents, configuration and plot
+% Like previously
 
 Lx = 600; Ly = 800;
 nx = 300; ny = 400;
@@ -7,13 +11,14 @@ y  = linspace(0,Ly,ny);
 [X,Y] = meshgrid(x,y);
 R = 700;
 
-scanp = 0.0;
+%% Negative triangular
+scanp = -1.0;
 
-xplasma = 0.5 + 0.05*scanp; %0.4
-divertx = 0.5 - 0.25*scanp;% 0.3 + xplasma;
-divertx2= 1.2; %0.75 + xplasma;
+xplasma = 0.5 + 0.05*scanp;
+divertx = 0.5 - 0.25*scanp;
+divertx2= 1.2;
 divertx3= divertx;
-divertx4= -0.2; %xplasma-0.65;
+divertx4= -0.2;
 hxpt = 180;
 
 iPlasma = 14.2857;
@@ -23,129 +28,77 @@ propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
 propDiv3= 0.55*abs(scanp);
 propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
 
-plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
-plasma.isPlasma = true;
-divertor = currentWire(divertx*Lx,2*hxpt-5/8*Ly,propDiv,plasma);
-divertor2= currentWire(divertx2*Lx,5/8*Ly,propDiv2,plasma);
-divertor3= currentWire(divertx3*Lx,Ly-(2*hxpt-5/8*Ly),propDiv3,plasma);
-divertor4= currentWire(divertx4*Lx,5/8*Ly,propDiv4,plasma);
+c1plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
+c1plasma.isPlasma = true;
+c1divertor = currentWire(divertx*Lx,2*hxpt-5/8*Ly,propDiv,c1plasma);
+c1divertor2= currentWire(divertx2*Lx,5/8*Ly,propDiv2,c1plasma);
+c1divertor3= currentWire(divertx3*Lx,Ly-(2*hxpt-5/8*Ly),propDiv3,c1plasma);
+c1divertor4= currentWire(divertx4*Lx,5/8*Ly,propDiv4,c1plasma);
 
-config = mConf(R, [plasma,divertor,divertor2,divertor3,divertor4]);
-config.simArea = [0,Lx;0,Ly];
-config.commit(1,1)
+clear config1
+config1 = mConf(R, [c1plasma,c1divertor,c1divertor2,c1divertor3,c1divertor4]);
+config1.simArea = [0,Lx;0,Ly];
 
-F = figure;
-set(F,'Position',[50 50 560 693])
-resetButton = uicontrol('Parent',F,'String','scanp=0','Max',0,'Min',0,...
-    'Callback',@configUpdate);
-retryButton = uicontrol('Parent',F,'String','Re-commit','Max',0,'Min',0,...
-    'Position',[200 20 160 20],'Callback',@retryCommit);
-sld = uicontrol('Parent',F,'Style', 'slider',...
-        'Min',-1,'Max',1,'Value',0,...
-        'Position', [400 20 120 20],...
-        'SliderStep',[0.1,0.25],...
-        'Callback', @configUpdate);
-ax = axes;
-drawPlot;
+%% SN
+scanp = 0.0;
 
-    function drawPlot
-        sa = config.simArea;
-        cla(ax)
-        rectangle('Position',[sa(1),sa(2),sa(3)-sa(1),sa(4)-sa(2)],...
-            'LineStyle','-','EdgeColor','b','Parent',ax)
-        hold(ax,'on')
-        cols = lines(length(config.currents)); idx = 1;
-        for cur=config.currents
-            scatter(ax,cur.x,cur.y,75,'o','filled','MarkerFaceColor',cols(idx,:))
-            idx = idx + 1;
-        end
-        contour(ax,X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
-        contour(ax,X,Y,config.fluxFx(X,Y),10,'--k')
-        hold(ax,'off')
-        axis(ax,'image')
-        title(ax,['scanp=',num2str(scanp)])
-    end
+xplasma = 0.5 + 0.05*scanp;
+divertx = 0.5 - 0.25*scanp;
+divertx2= 1.2;
+divertx3= divertx;
+divertx4= -0.2;
+hxpt = 180;
 
-    function configUpdate(source,~)
-        scanp = source.Value;
-        sld.Value = scanp;
-        
-        xplasma = 0.5 + 0.05*scanp; %0.4
-        divertx = 0.5 - 0.25*scanp;% 0.3 + xplasma;
-        divertx2= 1.2; %0.75 + xplasma;
-        divertx3= divertx;
-        divertx4= -0.2; %xplasma-0.65;
-        hxpt = 180;
-        
-        iPlasma = 14.2857;
-        sgmPlasma = 70.71;
-        propDiv = 1.0;
-        propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
-        propDiv3= 0.55*abs(scanp);
-        propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
-        
-        % Plasma update
-        plasma.x = xplasma*Lx;
-        plasma.y = 5/8*Ly;
-        plasma.curr = iPlasma;
-        plasma.sigma = sgmPlasma;
-        % Divertor Update
-        divertor.x = divertx*Lx;
-        divertor.y = 2*hxpt-5/8*Ly;
-        divertor.curr = propDiv;
-        % Divertor2 update
-        divertor2.x = divertx2*Lx;
-        divertor2.y = 5/8*Ly;
-        divertor2.curr = propDiv2;
-        % Divertor3 update
-        divertor3.x = divertx3*Lx;
-        divertor3.y = Ly-(2*hxpt-5/8*Ly);
-        divertor3.curr = propDiv3;
-        % Divertor4 update
-        divertor4.x = divertx4*Lx;
-        divertor4.y = 5/8*Ly;
-        divertor4.curr = propDiv4;
-        % Commit new config
-        title(ax,'WAIT')
-        retryButton.Enable = 'off';
-        resetButton.Enable = 'off';
-        sld.Enable = 'off';
-        drawnow;
-        try
-            config.commit(1,1)
-        catch ME
-            retryButton.Enable = 'on';
-            resetButton.Enable = 'on';
-            sld.Enable = 'on';
-            drawPlot
-            rethrow(ME);
-        end
-        retryButton.Enable = 'on';
-        resetButton.Enable = 'on';
-        sld.Enable = 'on';
-        drawPlot
-    end
+iPlasma = 14.2857;
+sgmPlasma = 70.71;
+propDiv = 1.0;
+propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
+propDiv3= 0.55*abs(scanp);
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
 
-    function retryCommit(~,~)
-        % Commit config again
-        title(ax,'WAIT')
-        retryButton.Enable = 'off';
-        resetButton.Enable = 'off';
-        sld.Enable = 'off';
-        drawnow;
-        try
-            config.commit(1,1,'Force',true)
-        catch ME
-            retryButton.Enable = 'on';
-            resetButton.Enable = 'on';
-            sld.Enable = 'on';
-            drawPlot
-            rethrow(ME);
-        end
-        retryButton.Enable = 'on';
-        resetButton.Enable = 'on';
-        sld.Enable = 'on';
-        drawPlot
-    end
+c2plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
+c2plasma.isPlasma = true;
+c2divertor = currentWire(divertx*Lx,2*hxpt-5/8*Ly,propDiv,c2plasma);
+c2divertor2= currentWire(divertx2*Lx,5/8*Ly,propDiv2,c2plasma);
+c2divertor3= currentWire(divertx3*Lx,Ly-(2*hxpt-5/8*Ly),propDiv3,c2plasma);
+c2divertor4= currentWire(divertx4*Lx,5/8*Ly,propDiv4,c2plasma);
 
-end
+clear config2
+config2 = mConf(R, [c2plasma,c2divertor,c2divertor2,c2divertor3,c2divertor4]);
+config2.simArea = [0,Lx;0,Ly];
+
+%% Positive triangular
+scanp = 1.0;
+
+xplasma = 0.5 + 0.05*scanp;
+divertx = 0.5 - 0.25*scanp;
+divertx2= 1.2;
+divertx3= divertx;
+divertx4= -0.2;
+hxpt = 180;
+
+iPlasma = 14.2857;
+sgmPlasma = 70.71;
+propDiv = 1.0;
+propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
+propDiv3= 0.55*abs(scanp);
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
+
+c3plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
+c3plasma.isPlasma = true;
+c3divertor = currentWire(divertx*Lx,2*hxpt-5/8*Ly,propDiv,c3plasma);
+c3divertor2= currentWire(divertx2*Lx,5/8*Ly,propDiv2,c3plasma);
+c3divertor3= currentWire(divertx3*Lx,Ly-(2*hxpt-5/8*Ly),propDiv3,c3plasma);
+c3divertor4= currentWire(divertx4*Lx,5/8*Ly,propDiv4,c3plasma);
+
+clear config3
+config3 = mConf(R, [c3plasma,c3divertor,c3divertor2,c3divertor3,c3divertor4]);
+config3.simArea = [0,Lx;0,Ly];
+
+%% Browse configurations
+configBrowser([config1,config2,config3],-1:1,2);
+clear config2 config3
+
+% Properties of the displayed configuration can be queried from the
+% 'config' variable. The configBrowser function modifies the config1
+% handle.
