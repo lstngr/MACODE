@@ -226,7 +226,10 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
             % NOTE - Copy method is sealed since we just want to have deep
             % copy for parent-children relationships. All other properties
             % should be shallow copied.
-            
+            persistent level
+            if isempty(level)
+                level = 0;
+            end
             % Shallow copy of current. Parent and Children Handles still
             % refer to non-copied objects
             cp = copyElement@matlab.mixin.Copyable(obj);
@@ -234,9 +237,20 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
             cp.Children = currentWire.empty(numel(obj.Children),0);
             for ichild=1:numel(obj.Children)
                 % Deep copy child
+                level = level + 1;
                 cp.Children(ichild) = copy(obj.Children(ichild));
+                level = level - 1;
                 % Set child parent accordingly
                 cp.Children(ichild).Parent = cp;
+            end
+            
+            % Back at initially copied object?
+            if level==0
+                if ~isempty(cp.Parent)
+                    % Add new object to (original, non-copied) parent
+                    cp.Parent.Children(end+1) = cp;
+                end
+                level = [];
             end
         end
     end
