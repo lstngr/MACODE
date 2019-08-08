@@ -1,21 +1,22 @@
 function activeConf = configBrowser(obj,varargin)
 
-narginchk(1,3);
 assert(isa(obj,'mConf'))
 nobj = numel(obj);
 assert(nobj>1);
 
-pval = linspace(-1,1,nobj);
-if nargin>1
-    pval = varargin{1};
-    validateattributes(pval,{'double'},{'numel',nobj,'>=',-1,'<=',1,'increasing'})
-    assert(pval(1)==-1&&pval(end)==1)
-end
-ntry = 1;
-if nargin==3
-    validateattributes(varargin{2},{'double'},{'positive','scalar'})
-    ntry = varargin{2};
-end
+defaultScanP = linspace(-1,1,nobj);
+defaultNTry = 1;
+defaultDelete = true;
+
+p = inputParser;
+addOptional(p,'ScanP',defaultScanP,@(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj}))
+addOptional(p,'Retries',defaultNTry,@(x)validateattributes(x,{'double'},{'positive','scalar','integer'}))
+addParameter(p,'DeleteSample',defaultDelete,@(x)validateattributes(x,{'logical'},{'scalar'}))
+parse(p,varargin{:})
+
+pval = p.Results.ScanP;
+ntry = p.Results.Retries;
+deleteSamples = p.Results.DeleteSample;
 
 % Configurations should have same major radius and simulated area
 assert(isequal(obj.R))
@@ -53,7 +54,10 @@ warning on MATLAB:structOnObject
 % Delete sampled configurations that were passed.
 oldObj = obj;
 obj = copy(obj(1));
-delete(oldObj);
+if deleteSamples
+    delete(oldObj);
+end
+clear oldObj;
 
 % Initial scan parameter
 scanp = 0;
@@ -64,12 +68,12 @@ panelF = figure('Position',[30,50,250,400]);
 statetxt = uicontrol('Style','text','String','Ready',...
     'Position',[50,350,150,30],'Fontsize',16,'Parent',panelF);
 pslider = uicontrol('Style','slider','SliderStep',[0.05,0.2],...
-    'Position',[50,300,150,30],'Min',-1,'Max',1,'Enable','off',...
+    'Position',[50,300,150,30],'Min',min(pval),'Max',max(pval),'Enable','off',...
     'Callback',@setScanp,'Parent',panelF);
 addlistener(pslider, 'Value', 'PostSet', @(src,evnt)setScanp(pslider));
 retryBt = uicontrol('Style','pushbutton','String','Re-commit',...
     'Position',[50,250,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
-resetBt = uicontrol('Style','pushbutton','String','Reset','Value',0,'Min',0,'Max',0,...
+resetBt = uicontrol('Style','pushbutton','String','Reset','Max',0.5*(min(pval)+max(pval)),...
     'Position',[50,200,150,30],'Enable','off','Parent',panelF,'Callback',@setScanp);
 updateBt =uicontrol('Style','pushbutton','String','Update','Value',0,'Min',0,'Max',0,...
     'Position',[50,150,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
@@ -80,7 +84,7 @@ trigtxt = annotation(gcf,'textbox','String',...
     'Units','pixels','Position',[50,30,150,60],'Fontsize',12,'Interpreter','latex');
 
 % Initialize plot figure
-plotF = figure('Position',[290,50,650,600]);
+plotF = figure('Position',[290,50,650,600],'DeleteFcn',@removeTV);
 ax = axes('Parent',plotF);
 axis(ax,'image');
 xlabel(ax,'x');
@@ -181,6 +185,12 @@ activeConf = obj;
         pslider.Value = scanp;
         pvaltxt.String = ['p=',num2str(scanp)];
         drawnow;
+    end
+
+    function removeTV(src,~)
+        lockPanel(true);
+        statetxt.String = 'DELETED';
+        delete(src);
     end
 
 end
