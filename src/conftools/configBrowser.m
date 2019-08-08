@@ -50,7 +50,10 @@ end
 warning on MATLAB:structOnObject
 
 % Keep working with first configuration that was passed
-obj = obj(1);
+% Delete sampled configurations that were passed.
+oldObj = obj;
+obj = copy(obj(1));
+delete(oldObj);
 
 % Initial scan parameter
 scanp = 0;
