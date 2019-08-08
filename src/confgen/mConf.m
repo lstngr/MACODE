@@ -374,9 +374,18 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % TODO - Get rid of the "arbitrary" amount, or provide user
             % with adjustable parameter.
             
-            % Get target psi's
+            % Get target psi's, but need a psi offset which we compute
             assert(~isempty(obj.separatrixPsi))
-            psiOffset = 1;
+            baseScale = 5e-5; % Arbitrary shift to select contour
+            Points(1) = 100; % # of sample points on grid
+            w = obj.simArea(3)-obj.simArea(1);
+            h= obj.simArea(4)-obj.simArea(2);
+            Points(2) = Points(1) * min([w,h]) / max([w,h]);
+            [~,I] = sort([h,w]);
+            Points = Points(I);
+            [X,Y] = meshgrid(linspace(obj.simArea(1),obj.simArea(3),Points(1)),...
+                linspace(obj.simArea(2),obj.simArea(4),Points(2)));
+            psiOffset = baseScale * range(obj.fluxFx(X(:),Y(:)));
             targetPsi = obj.separatrixPsiTol - psiOffset;
             if numel(targetPsi)==1
                 % Else, contourc will returns targetPsi different contours!
@@ -400,7 +409,10 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
             assert(~isempty(obj.lcfsPsi));
-            psiOffset = 1e-1;
+            % Compute psi offset
+            baseScale = 5e-5;
+            psiOffset = baseScale * range([obj.lcfsPsi,...
+                obj.fluxFx(obj.corePosition(1),obj.corePosition(2))]);
             targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
             contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);
