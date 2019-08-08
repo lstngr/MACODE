@@ -45,6 +45,7 @@ waitfor(...
 if ~exist([script_path,filesep,'docs'],'dir')
     mkdir([script_path,filesep,'docs'])
 end
+
 m2html('mfiles','src','ignoredDir','m2html',...
     'htmldir','docs', 'recursive','on', 'global','on',...
     'graph','on','globalHypertextLinks','on','verbose','off');
@@ -59,6 +60,7 @@ publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'doubleXPoint.m']  ,'outputDir',demos_path);
 publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
+publish([examples_path,filesep,'configCopy.m'],'outputDir',demos_path);
 
 % Cleanup
 close all
