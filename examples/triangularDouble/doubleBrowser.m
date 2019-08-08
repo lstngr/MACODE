@@ -27,6 +27,5 @@ for iconf=1:numel(scanp)
     confs(iconf) = mConf(R, [plasma,divertor,divertor2]);
     confs(iconf).simArea = [0,Lx;0,Ly];
 end
-clear tmpConfig
 
 config = configBrowser(confs,scanp,4);
