@@ -1,5 +1,5 @@
 % TODO - Could implement domain scaling
-classdef mConf < matlab.mixin.SetGet
+classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
     % MCONF     Tokamak Magnetic Configuration
     %   MCONF is a class describing a "magnetic configuration" of a
     %   Tokamak. A set of currents is provided, as well as an area of
@@ -486,5 +486,60 @@ classdef mConf < matlab.mixin.SetGet
             obj.corePosition = double([sol.x,sol.y]);
         end
         
+    end
+    
+    methods( Access = protected )
+        function cp = copyElement(obj)
+            % Start by shallow copy of every property.
+            cp = copyElement@matlab.mixin.Copyable(obj);
+            % Then, find all independent currents of the class. Dependent
+            % current must reference them (per constructor behavior).
+            
+            % All Root Currents lead to different trees
+            isRoot = false(1,numel(obj.currents));
+            for ic=1:numel(obj.currents)
+                isRoot(ic) = isempty(obj.currents(ic).Parent);
+            end
+            
+            % Copy root currents (and all descendants)
+            rootCp = currentWire.empty(sum(isRoot),0);
+            rootCur= obj.currents(isRoot);
+            for ir=1:sum(isRoot)
+                rootCp(ir) = copy(rootCur(ir));
+            end
+            
+            % Iterate on mConf object being copied, and detect which
+            % children currents need to be included (and which not!)
+            newCurs = currentWire.empty(numel(obj.currents),0);
+            for ic=1:numel(obj.currents)
+                if isRoot(ic)
+                    % If object is supposed to be a root, easy, we have it
+                    % ready.
+                    newCurs(ic) = rootCp(sum(isRoot(1:ic)));
+                else
+                    % Need to browse rootCp to find children
+                    % From original child, ask for its index among parent's
+                    % Children, and go up until reached root
+                    idxc = [];
+                    curPtr = obj.currents(ic);
+                    while ~isempty(curPtr.Parent)
+                        idxc(end+1) = find(obj.currents(ic).Parent.Children==obj.currents(ic)); %#ok<AGROW>
+                        curPtr = curPtr.Parent; % Move up in hierarchy
+                    end
+                    % Here, curPtr is a root. Find which, and set pointer
+                    % on new object
+                    curPtr = rootCp(rootCur==curPtr);
+                    % Reverse index sequence to go down hieararchy
+                    idxc = fliplr(idxc);
+                    for inc=1:numel(idxc)
+                        curPtr = curPtr.Children(idxc(inc));
+                    end
+                    % Found requested child current! Set it and go to next
+                    % child.
+                    newCurs(ic) = curPtr;
+                end
+            end
+            cp.currents = newCurs;
+        end
     end
 end
