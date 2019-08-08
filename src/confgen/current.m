@@ -1,4 +1,4 @@
-classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
+classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mixin.Copyable
     % CURRENT   Object describing an electrical current
     %   This abstract superclass constitutes the base class for one dimensional
     %   current objects. Such objects must be described by (at least) a
@@ -60,6 +60,10 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
             if nargin==4
                 relCur = varargin{1};
                 assert(~isempty(relCur) && isa(relCur,'current'));
+                % NOTE - By design, it should be impossible to form a
+                % hiearchy loop between currents where following Parent
+                % objects leads to finding the same handle twice (thus
+                % forming a dangerous loop).
                 obj.Parent = relCur;
                 if isempty(obj.Parent.Children)
                     obj.Parent.Children = obj;
@@ -212,5 +216,25 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous
             % type!
         end
     end
-        
+    
+    methods( Access = protected, Sealed )
+        function cp = copyElement(obj)
+            % NOTE - Copy method is sealed since we just want to have deep
+            % copy for parent-children relationships. All other properties
+            % should be shallow copied.
+            
+            % Shallow copy of current. Parent and Children Handles still
+            % refer to non-copied objects
+            cp = copyElement@matlab.mixin.Copyable(obj);
+            % Clear Children
+            cp.Children = currentWire.empty(numel(obj.Children),0);
+            for ichild=1:numel(obj.Children)
+                % Deep copy child
+                cp.Children(ichild) = copy(obj.Children(ichild));
+                % Set child parent accordingly
+                cp.Children(ichild).Parent = cp;
+            end
+        end
+    end
+    
 end
