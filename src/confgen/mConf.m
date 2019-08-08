@@ -102,12 +102,13 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         function set.currents(obj,curs)
             assert(all(arrayfun(@(x)isa(x,'current'),curs) & isvalid(curs)),...
                 'Expected argument to be a valid array of current handles.');
-            for cur=curs
+            for icur=1:numel(curs)
+                cur = curs(icur);
                 if ~isempty(cur.Parent)
                     % If parent provided, expect to find it in the
                     % configuration. Else, warn user.
                     if ~(any(ismember(cur.Parent,curs)))
-                        error('Parent was not found.')
+                        error('Parent of current in position %u was not found.',icur)
                     end
                 end
             end

@@ -242,8 +242,10 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
             
             % Back at initially copied object?
             if level==0
-                % Add new object to (original, non-copied) parent
-                cp.Parent.Children(end+1) = cp;
+                if ~isempty(cp.Parent)
+                    % Add new object to (original, non-copied) parent
+                    cp.Parent.Children(end+1) = cp;
+                end
                 level = [];
             end
         end
