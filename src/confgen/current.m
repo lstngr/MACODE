@@ -59,7 +59,11 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
             obj.c = c;
             if nargin==4
                 relCur = varargin{1};
-                assert(~isempty(relCur) && isa(relCur,'current'));
+                assert(numel(relCur)==1,'MACODE:current:nonSingleParent',...
+                    'The passed Parent current contains %u elements. Expected one.',numel(relCur));
+                assert(isa(relCur,'current') && isvalid(relCur),...
+                    'MACODE:current:invalidParent',...
+                    'The provided handle is invalid, or does not inherit the current class.');
                 % NOTE - By design, it should be impossible to form a
                 % hiearchy loop between currents where following Parent
                 % objects leads to finding the same handle twice (thus

@@ -33,7 +33,9 @@ classdef currentGaussian < current
         end
         
         function bx = magFieldX(obj,x,y)
-            assert(isequal(size(x),size(y)));
+            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/magFieldX','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/magFieldX','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
@@ -41,8 +43,9 @@ classdef currentGaussian < current
         end
         
         function by = magFieldY(obj,x,y)
-            assert(isequal(size(x),size(y)));
-            assert(isequal(size(x),size(y)));
+            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/magFieldY','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/magFieldY','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
@@ -50,6 +53,10 @@ classdef currentGaussian < current
         end
         
         function flx = fluxFx(obj,x,y,R)
+            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/fluxFx','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/fluxFx','y')
+            validateattributes(y,{'double'},{'real','finite','positive'},'currentGaussian/fluxFx','R')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;

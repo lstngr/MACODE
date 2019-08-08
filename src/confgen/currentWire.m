@@ -17,7 +17,9 @@ classdef currentWire < current
         end
         
         function bx = magFieldX(obj,x,y)
-            assert(isequal(size(x),size(y)));
+            validateattributes(x,{'double'},{'real','finite'},'currentWire/magFieldX','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentWire/magFieldX','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
@@ -25,8 +27,9 @@ classdef currentWire < current
         end
         
         function by = magFieldY(obj,x,y)
-            assert(isequal(size(x),size(y)));
-            assert(isequal(size(x),size(y)));
+            validateattributes(x,{'double'},{'real','finite'},'currentWire/magFieldY','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentWire/magFieldY','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
@@ -34,6 +37,10 @@ classdef currentWire < current
         end
         
         function flx = fluxFx(obj,x,y,R)
+            validateattributes(x,{'double'},{'real','finite'},'currentWire/fluxFx','x')
+            validateattributes(y,{'double'},{'real','finite'},'currentWire/fluxFx','y')
+            validateattributes(y,{'double'},{'real','finite','positive'},'currentWire/fluxFx','R')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
             d2 = dx.^2 + dy.^2;
