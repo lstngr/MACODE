@@ -17,8 +17,8 @@ classdef currentWire < current
         end
         
         function bx = magFieldX(obj,x,y)
-            validateattributes(x,{'double'},{'real','finite'},'currentWire/magFieldX','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentWire/magFieldX','y')
+            validateattributes(x,{'double','sym'},{'real'},'currentWire/magFieldX','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentWire/magFieldX','y')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
@@ -27,8 +27,8 @@ classdef currentWire < current
         end
         
         function by = magFieldY(obj,x,y)
-            validateattributes(x,{'double'},{'real','finite'},'currentWire/magFieldY','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentWire/magFieldY','y')
+            validateattributes(x,{'double','sym'},{'real'},'currentWire/magFieldY','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentWire/magFieldY','y')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
@@ -37,9 +37,9 @@ classdef currentWire < current
         end
         
         function flx = fluxFx(obj,x,y,R)
-            validateattributes(x,{'double'},{'real','finite'},'currentWire/fluxFx','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentWire/fluxFx','y')
-            validateattributes(y,{'double'},{'real','finite','positive'},'currentWire/fluxFx','R')
+            validateattributes(x,{'double','sym'},{'real'},'currentWire/fluxFx','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentWire/fluxFx','y')
+            validateattributes(R,{'double','sym'},{'real','positive'},'currentWire/fluxFx','R')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;

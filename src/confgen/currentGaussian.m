@@ -33,8 +33,8 @@ classdef currentGaussian < current
         end
         
         function bx = magFieldX(obj,x,y)
-            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/magFieldX','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/magFieldX','y')
+            validateattributes(x,{'double','sym'},{'real'},'currentGaussian/magFieldX','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentGaussian/magFieldX','y')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
@@ -43,8 +43,8 @@ classdef currentGaussian < current
         end
         
         function by = magFieldY(obj,x,y)
-            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/magFieldY','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/magFieldY','y')
+            validateattributes(x,{'double','sym'},{'real'},'currentGaussian/magFieldY','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentGaussian/magFieldY','y')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
@@ -53,9 +53,9 @@ classdef currentGaussian < current
         end
         
         function flx = fluxFx(obj,x,y,R)
-            validateattributes(x,{'double'},{'real','finite'},'currentGaussian/fluxFx','x')
-            validateattributes(y,{'double'},{'real','finite'},'currentGaussian/fluxFx','y')
-            validateattributes(y,{'double'},{'real','finite','positive'},'currentGaussian/fluxFx','R')
+            validateattributes(x,{'double','sym'},{'real'},'currentGaussian/fluxFx','x')
+            validateattributes(y,{'double','sym'},{'real'},'currentGaussian/fluxFx','y')
+            validateattributes(R,{'double','sym'},{'real','positive'},'currentGaussian/fluxFx','R')
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;

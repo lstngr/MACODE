@@ -95,23 +95,29 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function set.R(obj,R)
-            validateattributes(R,{'double','sym'},{'scalar'})
+            validateattributes(R,{'double','sym'},{'scalar','positive'})
             obj.R = R;
         end
         
         function set.currents(obj,curs)
+            assert(~isempty(curs),'MACODE:mConf:emptyCurrent',...
+                'Currents array must not be empty.')
             assert(all(arrayfun(@(x)isa(x,'current'),curs) & isvalid(curs)),...
+                'MACODE:mConf:invalidCurrents',...
                 'Expected argument to be a valid array of current handles.');
             for cur=curs
                 if ~isempty(cur.Parent)
                     % If parent provided, expect to find it in the
                     % configuration. Else, warn user.
-                    if ~(any(ismember(cur.Parent,curs)))
-                        error('Parent was not found.')
-                    end
+                    assert(any(ismember(cur.Parent,curs)),...
+                        'MACODE:mConf:missingParent',...
+                        'A current''s Parent was not found in the input currents array.');
                 end
             end
-            assert(sum([curs(:).isPlasma])==1,'Expected at exactly one plasma current.')
+            assert(sum([curs(:).isPlasma])==1,'MACODE:mConf:numPlasma',...
+                'Expected exactly one plasma current.')
+            assert(curs([curs.isPlasma]).curr>0,'MACODE:mConf:negPlasmaCurrent',...
+                'The plasma current is required to be positive.')
             obj.currents = curs;
         end
         
@@ -185,9 +191,11 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Parse inputs
             p = inputParser;
             addOptional(p,'nxpt',defaultNXPoint,...
-                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'},...
+                'mConf/commit','nxpt',1));
             addOptional(p,'ntri',defaultNTrials,...
-                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'},...
+                'mConf/commit','ntri',2));
             addParameter(p,'Limits',defaultLimits,...
                 @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
             addParameter(p,'OffsetScale',defaultOffScale,...
@@ -198,15 +206,18 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             
             % Commit configuration as it is loaded and compute stuff
-            syms x y
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
             state = obj.checkCommit;
             if state == commitState.Done && ~p.Results.Force
-                warning('magnetic structure unchanged since last commit. You can force the commit with ''Force'',true.')
+                warning('MACODE:mConf:commitExists',...
+                    ['Magnetic structure unchanged since last commit. ',...
+                    'You can force the commit with ''Force'' set to true.'])
                 return;
             elseif state == commitState.NotAvail
-                error('magnetic structure depends on symbolic variables. Commit impossible.')
+                error('MACODE:mConf:commitSym',...
+                    ['Magnetic structure depends on symbolic variables. ',...
+                    'You cannot commit such a configuration.'])
             end
             obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
             % Psi Separatrix and LCFS
@@ -228,6 +239,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   field of the current configuration. x and y are same sized
             %   numerical variables. The ouput variable, bx, has the same
             %   size as x and y.
+            validateattributes(x,{'double'},{'real'},'mConf/magFieldX','x')
+            validateattributes(y,{'double'},{'real'},'mConf/magFieldX','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             bx = zeros(size(x));
             for cur=obj.currents
                 bx = bx + cur.magFieldX(x,y);
@@ -240,6 +254,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   field of the current configuration. x and y are same sized
             %   numerical variables. The ouput variable, by, has the same
             %   size as x and y.
+            validateattributes(x,{'double'},{'real'},'mConf/magFieldY','x')
+            validateattributes(y,{'double'},{'real'},'mConf/magFieldY','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             by = zeros(size(x));
             for cur=obj.currents
                 by = by + cur.magFieldY(x,y);
@@ -258,6 +275,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   factor -R (major radius).
             %
             %   See also mConf/magFieldY
+            validateattributes(x,{'double'},{'real'},'mConf/gradXFluxFx','x')
+            validateattributes(y,{'double'},{'real'},'mConf/gradXFluxFx','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             gx = -obj.R * obj.magFieldY(x,y);
         end
         
@@ -273,6 +293,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   factor R (major radius).
             %
             %   See also mConf/magFieldX
+            validateattributes(x,{'double'},{'real'},'mConf/gradYFluxFx','x')
+            validateattributes(y,{'double'},{'real'},'mConf/gradYFluxFx','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             gy =  obj.R * obj.magFieldX(x,y);
         end
         
@@ -282,6 +305,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   function of the current configuration. x and y are same
             %   sized numerical variables. The ouput variable, p, has the
             %   same size as x and y.
+            validateattributes(x,{'double'},{'real'},'mConf/fluxFx','x')
+            validateattributes(y,{'double'},{'real'},'mConf/fluxFx','y')
+            assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             p = zeros(size(x));
             for cur=obj.currents
                 p = p + cur.fluxFx(x,y,obj.R);
@@ -323,18 +349,48 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function area = get.simArea(obj)
             if isempty(obj.simArea) && obj.checkCommit ~= commitState.NotAvail
+                % User is dumb and did not provide good limits...
+                warning('MACODE:mConf:autoLimits',...
+                    ['No simArea limits were provided in mConf/commit. ',...
+                    'Using automatic ones.\n',...
+                    'If this behavior is expected, consider disabling ',...
+                    'this warning: <a href="matlab:warning(''off'',''MACODE:mConf:autoLimits'')">',...
+                    'warning(''off'',''MACODE:mConf:autoLimits'')</a>'])
                 area = [min( [obj.currents(:).x] ), ...
                              max( [obj.currents(:).x]);...
                              min( [obj.currents(:).y] ),...
                              max( [obj.currents(:).y] ) ];
+                % Check if things get sketchy
+                if any(area(:,2)-area(:,1)<=0)
+                    [largeSide,idxLarge] = max(area(:,2)-area(:,1));
+                    if largeSide==0
+                        error('MACODE:mConf:badLimits',...
+                            ['Could not find suitable limits.\n',...
+                            'This is likely because all currents occupy the same point in space.'])
+                    end
+                    warning('MACODE:mConf:badAutoLimits',...
+                        ['Your coils are likely aligned on an axis. ',...
+                        'Automatic limits might not be suitable.\n',...
+                        'If this behavior is expected, consider disabling this warning: ',...
+                        '<a href="matlab:warning(''off'',''MACODE:mConf:badAutoLimits'')">',...
+                        'warning(''off'',''MACODE:mConf:badAutoLimits'')</a>'])
+                    meanSmall = mean(area(3-idxLarge,:));
+                    area(3-idxLarge,1) = meanSmall - largeSide/2;
+                    area(3-idxLarge,2) = meanSmall + largeSide/2;
+                end
+                obj.simArea = area;
                 return;
             end
             area = obj.simArea;
         end
         
         function p = get.psi95(obj)
-            assert(~isempty(obj.separatrixPsi));
-            assert(~isempty(obj.corePosition));
+            assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
+                'Could not find separatrix. Were x-points correctly detected?\n',...
+                'Suggested action: Commit the configuration again.');
+            assert(~isempty(obj.corePosition),'MACODE:mConf:noMagneticAxis',...
+                'Could not find magnetic axis. Was the center correctly detected?',...
+                'Suggested action: Commit the configuration again.');
             sp = obj.lcfsPsi;
             cp = obj.fluxFx(obj.corePosition(1),obj.corePosition(2));
             % If cp is not defined, try harder
@@ -356,7 +412,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function a = get.a(obj)
-            assert(~isempty(obj.magR));
+            assert(~isempty(obj.magR),'MACODE:mConf:noMagR',...
+                ['Could not find configuration''s radiuses. Did the last commit finish successfully?\n',...
+                'Suggested action: Commit the configuration again.']);
             a = (obj.magR.Rmax - obj.magR.Rmin)/2;
         end
         
@@ -378,7 +436,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % with adjustable parameter.
             
             % Get target psi's, but need a psi offset which we compute
-            assert(~isempty(obj.separatrixPsi))
+            assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
+                'Could not find separatrix. Were x-points correctly detected?\n',...
+                'Suggested action: Commit the configuration again.');
             baseScale = 5e-5 * offsetScale; % Arbitrary shift to select contour
             Points(1) = 100; % # of sample points on grid
             w = obj.simArea(3)-obj.simArea(1);
@@ -404,6 +464,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
             S = extract_contourc(C);
             S = removeOpenContours(S);
+            assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
+                ['Detection of a LCFS surface contour failed.\n',...
+                'Suggested action: Adjust offsetScale, or commit again.']);
             % Maximum available value of Psi must be LCFS
             obj.lcfsPsi = max(S.level)+psiOffset;
         end
@@ -411,7 +474,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         function computeMagR(obj,offsetScale)
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
-            assert(~isempty(obj.lcfsPsi));
+            assert(~isempty(obj.lcfsPsi),'MACODE:mConf:noLCFS',...
+                'Could not find LCFS. Did it''s detection complete successfully?\n',...
+                'Suggested action: Commit the configuration again.');
             % Compute psi offset
             baseScale = 5e-5 * offsetScale;
             psiOffset = baseScale * range([obj.lcfsPsi,...
@@ -426,7 +491,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
             S = extract_contourc(C);
             S = removeOpenContours(S);
-            assert(numel(S)>=1);
+            assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
+                ['Detection of a LCFS surface contour failed.\n',...
+                'Suggested action: Adjust offsetScale, or commit again.']);
             if(numel(S)>1)
                 % Multiple closed contours, find one enclosing core
                 corein = false(1,numel(S));
@@ -435,7 +502,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         S(is).x,S(is).y);
                 end
                 S = S(corein);
-            assert(numel(S)==1);
+                % TODO - Could compute which enclosing surface has a
+                % point closest to the magnetic axis...
+                assert(numel(S)==1,'MACODE:mConf:manyLCFS',...
+                    ['Many LCFS level contours enclosing the magnetic axis were found.\n',...
+                    'This is likely due to your simulation area being too large.',...
+                    'Suggested action: Crop domain and commit again.']);
             end
             xmax = max(S.x); [~,iymax] = max(S.y);
             xmin = min(S.x); [~,iymin] = min(S.y);
@@ -452,7 +524,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function xPointDetec(obj,nxpt,ntri,solve_lims)
             % Load symbolic field functions
-            syms x y
+            x = sym('x','real');
+            y = sum('y','real');
             % Trials to find x-points
             pts = zeros(ntri,2);
             diffxx =  diff(obj.symMagFieldX,y);
@@ -471,7 +544,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         pts(i,:) = NaN;
                     end
                 elseif numel(sol.x)>1
-                    error('wouldn''t expect 2 solutions. What''s happening??')
+                    error('MACODE:mConf:multiVPASolve',...
+                        'Unexpected behavior: Two null points were returned by vpasolve.')
                 else
                     % If no solutions, fill with NaN
                     pts(i,:) = NaN;
@@ -492,12 +566,13 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % Detect configuration's core (minimum flux function)
             plasma = obj.currents([obj.currents(:).isPlasma]);
-            assert(numel(plasma)==1)
-            syms x y
+            x = sym('x','real');
+            y = sym('y','real');
             bx = obj.symMagFieldX;
             by = obj.symMagFieldY;
             sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
-            assert(numel(sol.x)==1)
+            assert(numel(sol.x)==1,'MACODE:mConf:multiVPASolve',...
+                'Unexpected behavior: Two null points were returned by vpasolve.')
             obj.corePosition = double([sol.x,sol.y]);
         end
         
