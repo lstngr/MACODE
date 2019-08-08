@@ -180,6 +180,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             defaultNXPoint = +Inf;
             defaultNTrials = 10;
             defaultLimits = obj.simArea;
+            defaultOffScale = 1.0;
             defaultForce = false;
             % Parse inputs
             p = inputParser;
@@ -189,6 +190,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                 @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
             addParameter(p,'Limits',defaultLimits,...
                 @(x)validateattributes(x,{'numeric'},{'2d','square','ncols',2}));
+            addParameter(p,'OffsetScale',defaultOffScale,...
+                @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
             addParameter(p,'Force',defaultForce,...
                 @(x)validateattributes(x,{'logical'},{'scalar'}));
             parse(p,varargin{:})
@@ -209,11 +212,11 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Psi Separatrix and LCFS
             obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
                 obj.xpoints(:,2));
-            obj.lcfsDetec;
+            obj.lcfsDetec(p.Results.OffsetScale);
             % Find core location
             obj.coreDetec;
             % Compute geometrical properties
-            obj.computeMagR;
+            obj.computeMagR(p.Results.OffsetScale);
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -361,7 +364,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
     
     methods(Access=private)
         
-        function lcfsDetec(obj)
+        function lcfsDetec(obj,offsetScale)
             % Detects the LCFS, so that the user can differentiate with the
             % separatrixPsi when necessary. 
             % Called during commit, once x-points and separatrixPsi are
@@ -376,7 +379,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % Get target psi's, but need a psi offset which we compute
             assert(~isempty(obj.separatrixPsi))
-            baseScale = 5e-5; % Arbitrary shift to select contour
+            baseScale = 5e-5 * offsetScale; % Arbitrary shift to select contour
             Points(1) = 100; % # of sample points on grid
             w = obj.simArea(3)-obj.simArea(1);
             h= obj.simArea(4)-obj.simArea(2);
@@ -405,12 +408,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             obj.lcfsPsi = max(S.level)+psiOffset;
         end
         
-        function computeMagR(obj)
+        function computeMagR(obj,offsetScale)
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
             assert(~isempty(obj.lcfsPsi));
             % Compute psi offset
-            baseScale = 5e-5;
+            baseScale = 5e-5 * offsetScale;
             psiOffset = baseScale * range([obj.lcfsPsi,...
                 obj.fluxFx(obj.corePosition(1),obj.corePosition(2))]);
             targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
