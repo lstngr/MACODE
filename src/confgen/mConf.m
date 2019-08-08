@@ -527,7 +527,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         function xPointDetec(obj,nxpt,ntri,solve_lims)
             % Load symbolic field functions
             x = sym('x','real');
-            y = sum('y','real');
+            y = sym('y','real');
             % Trials to find x-points
             pts = zeros(ntri,2);
             diffxx =  diff(obj.symMagFieldX,y);

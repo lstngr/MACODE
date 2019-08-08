@@ -170,7 +170,7 @@ activeConf = obj;
                 'o','filled','MarkerFaceColor',cols(iicur,:))
         end
         scatter(ax,obj.xpoints(:,1),obj.xpoints(:,2),40,...
-                'o','filled','MarkerFaceColor','w')
+            'o','filled','MarkerFaceColor','w')
         contour(ax,X,Y,obj.fluxFx(X,Y),'-k','LevelList',obj.separatrixPsi)
         contour(ax,X,Y,obj.fluxFx(X,Y),10,'--k')
         hold(ax,'off')
@@ -188,8 +188,10 @@ activeConf = obj;
     end
 
     function removeTV(src,~)
-        lockPanel(true);
-        statetxt.String = 'DELETED';
+        if isvalid(panelF)
+            lockPanel(true);
+            statetxt.String = 'DELETED';
+        end
         delete(src);
     end
 
