@@ -1,4 +1,3 @@
-% TODO - Could implement domain scaling
 classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
     % MCONF     Tokamak Magnetic Configuration
     %   MCONF is a class describing a "magnetic configuration" of a

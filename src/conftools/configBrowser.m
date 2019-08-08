@@ -1,17 +1,60 @@
-function activeConf = configBrowser(obj,varargin)
+function varargout = configBrowser(obj,varargin)
+% CONFIGBROWSER Generate Interpolated Magnetic Configurations
+%   CONFIGBROWSER(confArray) processes an input mConf array,
+%   containing at least two elements, as magnetic configurations sampled
+%   uniformly on an arbitrary one-dimensional parameter space. This
+%   parameter space is described by the variable 'p', ranging from -1 to 1.
+%   Two windows will be open and allow to browse the parameter space. The
+%   interpolation between configurations is linear.
+%
+%   Note the input sample configuration array will be destroyed to avoid
+%   confusion with the output variables. This behavior may be modified, see
+%   below
+%
+%   config = CONFIGBROWSER(confArray) allows querying the displayed
+%   configuration using the returned handle, config.
+%
+%   CONFIGBROWSER(confArray,p) allows the user to specify what value of p
+%   must be associated with each of the configurations. p is expected to
+%   have same size as confArray, and contain increasing values. Note that
+%   the minimum and maximum of p will now define the limits of the
+%   parameter space (and not -1 and 1).
+%
+%   CONFIGBROWSER(confArray,p,r) sets the number of solving attempts to
+%   find configuration x-points on each commit. A low value may lead to
+%   failing commits when updating the configuration.
+%
+%   CONFIGBROWSER(...,'DeleteSamples',false) retains the input
+%   configurations in memory. Note, however, that these configurations are
+%   not modified by the user's interaction with the GUI.
+%
+%   Note: Sample configurations must be passed with currents in the same
+%   indexed order. If you shuffle currents together between sample
+%   configurations, coils will be moved around the physical space during
+%   interpolation.
+%
+%   See also MCONF
 
-assert(isa(obj,'mConf'))
+nargoutchk(0,1)
+
+st = dbstack;
+assert(isa(obj,'mConf'),'MACODE:UndefinedFunction',...
+    'Undefined function ''%s'' for input arguments of type ''%s''.',st.name,class(obj))
 nobj = numel(obj);
-assert(nobj>1);
+assert(nobj>1,'MACODE:func:incorrectNumel',...
+    'Expected input number 1, confArray, to be an array with number of elements greater than 1.');
 
 defaultScanP = linspace(-1,1,nobj);
 defaultNTry = 1;
 defaultDelete = true;
 
 p = inputParser;
-addOptional(p,'ScanP',defaultScanP,@(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj}))
-addOptional(p,'Retries',defaultNTry,@(x)validateattributes(x,{'double'},{'positive','scalar','integer'}))
-addParameter(p,'DeleteSample',defaultDelete,@(x)validateattributes(x,{'logical'},{'scalar'}))
+addOptional(p,'ScanP',defaultScanP,@(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj}),...
+    st.name,'p',2)
+addOptional(p,'Retries',defaultNTry,@(x)validateattributes(x,{'double'},{'positive','scalar','integer'}),...
+    st.name,'r',3)
+addParameter(p,'DeleteSample',defaultDelete,@(x)validateattributes(x,{'logical'},{'scalar'}),...
+    st.name,'DeleteSamples')
 parse(p,varargin{:})
 
 pval = p.Results.ScanP;
@@ -19,18 +62,22 @@ ntry = p.Results.Retries;
 deleteSamples = p.Results.DeleteSample;
 
 % Configurations should have same major radius and simulated area
-assert(isequal(obj.R))
+assert(isequal(obj.R),'MACODE:mConf:nonEquiv',...
+    'Provided configurations must have equal major radius.')
 simArea = arrayfun(@(x)reshape(x{1},1,[]),{obj.simArea},'UniformOutput',false);
-assert(isequal(simArea{:}))
+assert(isequal(simArea{:}),'MACODE:mConf:nonEquiv',...
+    'Provided configurations must have equal simArea limits.')
 
 % Configurations should all be commitable
 states = arrayfun(@checkCommit,obj,'UniformOutput',false);
 states = [states{:}];
-assert(all(states~=commitState.NotAvail))
+assert(all(states~=commitState.NotAvail),'MACODE:mConf:commitSym',...
+    'Provided configurations depend on symbolic variablesand can''t be committed.')
 
 % Configurations should have same amount of currents
 ncur = arrayfun(@(x)numel(x{1}),{obj.currents});
-assert(numel(unique(ncur))==1)
+assert(numel(unique(ncur))==1,'MACODE:mConf:nonEquiv',...
+    'Provided configurations have different number of currents.')
 ncur = unique(ncur);
 
 % Gather current locations and intensities
@@ -60,21 +107,22 @@ end
 clear oldObj;
 
 % Initial scan parameter
-scanp = 0;
-oldScanp = 0;
+scanp = min(pval)+0.5*range(pval);
+oldScanp = scanp;
 
 % Initialize command panel
 panelF = figure('Position',[30,50,250,400]);
 statetxt = uicontrol('Style','text','String','Ready',...
     'Position',[50,350,150,30],'Fontsize',16,'Parent',panelF);
 pslider = uicontrol('Style','slider','SliderStep',[0.05,0.2],...
-    'Position',[50,300,150,30],'Min',min(pval),'Max',max(pval),'Enable','off',...
-    'Callback',@setScanp,'Parent',panelF);
+    'Position',[50,300,150,30],'Min',min(pval),'Max',max(pval),'Value',scanp,...
+    'Enable','off','Callback',@setScanp,'Parent',panelF);
 addlistener(pslider, 'Value', 'PostSet', @(src,evnt)setScanp(pslider));
 retryBt = uicontrol('Style','pushbutton','String','Re-commit',...
     'Position',[50,250,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
-resetBt = uicontrol('Style','pushbutton','String','Reset','Max',0.5*(min(pval)+max(pval)),...
-    'Position',[50,200,150,30],'Enable','off','Parent',panelF,'Callback',@setScanp);
+resetBt = uicontrol('Style','pushbutton','String','Reset','Min',min(pval)+0.5*range(pval),...
+    'Max',min(pval)+0.5*range(pval),'Position',[50,200,150,30],'Enable','off',...
+    'Parent',panelF,'Callback',@setScanp);
 updateBt =uicontrol('Style','pushbutton','String','Update','Value',0,'Min',0,'Max',0,...
     'Position',[50,150,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
 pvaltxt = uicontrol('Style','text','String',['p=',num2str(scanp)],...
@@ -97,7 +145,11 @@ gy  = linspace(obj.simArea(2),obj.simArea(4),ny);
 % Commit beautiful object
 updateConfig;
 drawnow;
-activeConf = obj;
+% And return it
+varargout = {};
+if nargout==1
+    varargout{1} = obj;
+end
 
     function lockPanel(toggle)
         if toggle
