@@ -45,16 +45,16 @@ assert(nobj>1,'MACODE:func:incorrectNumel',...
     'Expected input number 1, confArray, to be an array with number of elements greater than 1.');
 
 defaultScanP = linspace(-1,1,nobj);
-defaultNTry = 1;
+defaultNTry = 5;
 defaultDelete = true;
 
 p = inputParser;
-addOptional(p,'ScanP',defaultScanP,@(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj}),...
-    st.name,'p',2)
-addOptional(p,'Retries',defaultNTry,@(x)validateattributes(x,{'double'},{'positive','scalar','integer'}),...
-    st.name,'r',3)
-addParameter(p,'DeleteSample',defaultDelete,@(x)validateattributes(x,{'logical'},{'scalar'}),...
-    st.name,'DeleteSamples')
+addOptional(p,'ScanP',defaultScanP,...
+    @(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj},st.name,'p',2))
+addOptional(p,'Retries',defaultNTry,...
+    @(x)validateattributes(x,{'double'},{'positive','scalar','integer'},st.name,'r',3))
+addParameter(p,'DeleteSample',defaultDelete,...
+    @(x)validateattributes(x,{'logical'},{'scalar'},st.name,'DeleteSamples'))
 parse(p,varargin{:})
 
 pval = p.Results.ScanP;
