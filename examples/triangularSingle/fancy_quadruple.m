@@ -1,6 +1,3 @@
-%% NEGTRIDOUBLE     Full double x-point negative triangular configuration
-% YEAYEAYEA
-
 %% Define domain, currents, configuration and plot
 % Like previously
 
@@ -23,10 +20,10 @@ hxpt = 180;
 
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
-propDiv = 1.0;
-propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
-propDiv3= 0.55*abs(scanp);
-propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
+propDiv = 1.0+0.2*abs(scanp);
+propDiv2= double(scanp<0)*abs(scanp)*-0.65+double(scanp>0)*abs(scanp)*0.1;
+propDiv3= 0.65*abs(scanp);
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.65;
 
 c1plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 c1plasma.isPlasma = true;
@@ -40,7 +37,7 @@ config1 = mConf(R, [c1plasma,c1divertor,c1divertor2,c1divertor3,c1divertor4]);
 config1.simArea = [0,Lx;0,Ly];
 
 %% SN
-scanp = 0.0;
+scanp =  0.0;
 
 xplasma = 0.5 + 0.05*scanp;
 divertx = 0.5 - 0.25*scanp;
@@ -51,10 +48,10 @@ hxpt = 180;
 
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
-propDiv = 1.0;
-propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
-propDiv3= 0.55*abs(scanp);
-propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
+propDiv = 1.0+0.2*abs(scanp);
+propDiv2= double(scanp<0)*abs(scanp)*-0.65+double(scanp>0)*abs(scanp)*0.1;
+propDiv3= 0.65*abs(scanp);
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.65;
 
 c2plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 c2plasma.isPlasma = true;
@@ -68,7 +65,7 @@ config2 = mConf(R, [c2plasma,c2divertor,c2divertor2,c2divertor3,c2divertor4]);
 config2.simArea = [0,Lx;0,Ly];
 
 %% Positive triangular
-scanp = 1.0;
+scanp =  1.0;
 
 xplasma = 0.5 + 0.05*scanp;
 divertx = 0.5 - 0.25*scanp;
@@ -79,10 +76,10 @@ hxpt = 180;
 
 iPlasma = 14.2857;
 sgmPlasma = 70.71;
-propDiv = 1.0;
-propDiv2= double(scanp<0)*abs(scanp)*-0.55+double(scanp>0)*abs(scanp)*0.1;
-propDiv3= 0.55*abs(scanp);
-propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.55;
+propDiv = 1.0+0.2*abs(scanp);
+propDiv2= double(scanp<0)*abs(scanp)*-0.65+double(scanp>0)*abs(scanp)*0.1;
+propDiv3= 0.65*abs(scanp);
+propDiv4= double(scanp<0)*abs(scanp)*0.1-double(scanp>0)*abs(scanp)*0.65;
 
 c3plasma   = currentGaussian(xplasma*Lx,5/8*Ly,iPlasma,sgmPlasma);
 c3plasma.isPlasma = true;
