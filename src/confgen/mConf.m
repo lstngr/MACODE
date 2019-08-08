@@ -107,7 +107,7 @@ classdef mConf < matlab.mixin.SetGet
                     % If parent provided, expect to find it in the
                     % configuration. Else, warn user.
                     if ~(any(ismember(cur.Parent,curs)))
-                        warning('Parent was not found.')
+                        error('Parent was not found.')
                     end
                 end
             end
