@@ -1,4 +1,4 @@
-%% Creating mConf Parameter Scans
+%% Creating Parameter Scans Over Magnetic Configurations
 % The creation of individual configurations was covered in
 % <configDivertor.html another example>. We now present a tool allowing one
 % to progressively transition from a configuration to the other.

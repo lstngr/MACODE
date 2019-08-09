@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding="utf-8"?>
+<toc version="2.0">
+    <tocitem target="startPage.html">MACODE Toolbox
+        <tocitem target="m2html/index.html">Function Index
+            <tocitem target="m2html/src/confgen/index.html">Classes
+                <tocitem target="m2html/src/confgen/current.html">current
+                </tocitem>
+                <tocitem target="m2html/src/confgen/currentWire.html">currentWire
+                </tocitem>
+                <tocitem target="m2html/src/confgen/currentGaussian.html">currentGaussian
+                </tocitem>
+                <tocitem target="m2html/src/confgen/mConf.html">mConf
+                </tocitem>
+                <tocitem target="m2html/src/confgen/commitState.html">commitState
+                </tocitem>
+            </tocitem>
+            <tocitem target="m2html/src/conftools/index.html">Helper Functions
+                <tocitem target="m2html/src/conftools/configBrowser.html">configBrowser
+                </tocitem>
+                <tocitem target="m2html/src/conftools/magShear.html">magShear
+                </tocitem>
+                <tocitem target="m2html/src/conftools/safetyFactor.html">safetyFactor
+                </tocitem>
+                <tocitem target="m2html/src/conftools/triangularity.html">triangularity
+                </tocitem>
+            </tocitem>
+            <tocitem target="m2html/src/util/index.html">Utilities
+                <tocitem target="m2html/src/util/extract_contourc.html">extract_contourc
+                </tocitem>
+                <tocitem target="m2html/src/util/fig2png.html">fig2png
+                </tocitem>
+                <tocitem target="m2html/src/util/removeOpenContours.html">removeOpenContours
+                </tocitem>
+                <tocitem target="m2html/src/util/squiver.html">squiver
+                </tocitem>
+                <tocitem target="m2html/src/util/str2rgb.html">str2rgb
+                </tocitem>
+            </tocitem>
+        </tocitem>
+        <tocitem target="m2html/graph.html">Dependency Graph
+        </tocitem>
+    </tocitem>
+</toc>

@@ -1,7 +1,10 @@
 function NegTriSetup(varargin)
 % NEGTRISETUP Sets up the negative triangularity project
 %   NEGTRISETUP makes sure required scripts and paths are added to MATLAB's
-%   userpath, builds the documentation if required, and does other things.
+%   userpath.
+%
+%   NEGTRISETUP('MakeDocs',true) also generates documentation for the
+%   toolbox.
 
 % TODO - Add other things that NEGTRISETUP might do!
 
@@ -43,12 +46,16 @@ waitfor(...
     );
 drawnow;
 
-if ~exist([script_path,filesep,'docs'],'dir')
-    mkdir([script_path,filesep,'docs'])
+docs_path = [script_path,filesep,'docs'];
+if ~exist(docs_path,'dir')
+    error('MACODE:nonExistentFolder','Documentation folder seems to be missing.')
+end
+if ~exist([docs_path,filesep,'m2html'],'dir')
+    mkdir([docs_path,filesep,'m2html'])
 end
 
 m2html('mfiles','src','ignoredDir','m2html',...
-    'htmldir','docs', 'recursive','on', 'global','on',...
+    'htmldir','docs/m2html', 'recursive','on', 'global','on',...
     'graph','on','globalHypertextLinks','on','verbose','off');
 
 examples_path = [script_path,filesep,'examples'];
@@ -56,6 +63,7 @@ demos_path = [script_path,filesep,'docs',filesep,'demos'];
 if ~exist(demos_path,'dir')
     mkdir(demos_path)
 end
+publish([examples_path,filesep,'startPage.m'],'outputDir',docs_path)
 publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);

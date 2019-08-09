@@ -1,4 +1,4 @@
-%% Create a Sample Magnetic Configuration Object
+%% Create a Magnetic Configuration Object
 % This demonsration script shows the intialization process of a simple
 % magnetic divertor configuration using the <matlab:doc('mConf') mConf>
 % class. Currents are first created, from which the configuration object is

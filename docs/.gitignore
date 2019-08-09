@@ -5,3 +5,5 @@
 *.php
 *.gif
 *.css
+
+!startImg.png
