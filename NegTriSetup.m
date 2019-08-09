@@ -41,6 +41,7 @@ waitfor(...
     'Please wait until all figures figures are closed.'},...
     'Documentation')...
     );
+drawnow;
 
 if ~exist([script_path,filesep,'docs'],'dir')
     mkdir([script_path,filesep,'docs'])
@@ -61,6 +62,10 @@ publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'doubleXPoint.m']  ,'outputDir',demos_path);
 publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configCopy.m'],'outputDir',demos_path);
+% Special option to capture full window figures
+publishoptions = struct('format','html','outputDir',demos_path,...
+    'figureSnapMethod','entireFigureWindow');
+publish([examples_path,filesep,'parameterScan.m'],publishoptions);
 
 % Cleanup
 close all

@@ -38,6 +38,7 @@ function varargout = configBrowser(obj,varargin)
 nargoutchk(0,1)
 
 st = dbstack;
+st = st(1); % Keep current function in stack only
 assert(isa(obj,'mConf'),'MACODE:UndefinedFunction',...
     'Undefined function ''%s'' for input arguments of type ''%s''.',st.name,class(obj))
 nobj = numel(obj);
@@ -54,7 +55,7 @@ addOptional(p,'ScanP',defaultScanP,...
 addOptional(p,'Retries',defaultNTry,...
     @(x)validateattributes(x,{'double'},{'positive','scalar','integer'},st.name,'r',3))
 addParameter(p,'DeleteSample',defaultDelete,...
-    @(x)validateattributes(x,{'logical'},{'scalar'},st.name,'DeleteSamples'))
+    @(x)validateattributes(x,{'logical'},{'scalar'},st.name,'DeleteSample'))
 parse(p,varargin{:})
 
 pval = p.Results.ScanP;
