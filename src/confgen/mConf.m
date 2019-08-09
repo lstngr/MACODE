@@ -486,7 +486,11 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             Points = Points(I);
             [X,Y] = meshgrid(linspace(obj.simArea(1),obj.simArea(3),Points(1)),...
                 linspace(obj.simArea(2),obj.simArea(4),Points(2)));
-            psiOffset = baseScale * range(obj.fluxFx(X(:),Y(:)));
+            allFlux = obj.fluxFx(X(:),Y(:));
+            rangeFluxFx(1) = min(allFlux);
+            rangeFluxFx(2) = max(allFlux);
+            rangeFluxFx = diff(rangeFluxFx);
+            psiOffset = baseScale * rangeFluxFx;
             targetPsi = obj.separatrixPsiTol - psiOffset;
             if numel(targetPsi)==1
                 % Else, contourc will returns targetPsi different contours!
@@ -516,8 +520,11 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                 'Previously called method from mConf/commit should have thrown.');
             % Compute psi offset
             baseScale = 5e-5 * offsetScale;
-            psiOffset = baseScale * range([obj.lcfsPsi,...
-                obj.fluxFx(obj.corePosition(1),obj.corePosition(2))]);
+            allFlux = [obj.lcfsPsi, obj.fluxFx(obj.corePosition(1),obj.corePosition(2))];
+            rangeFluxFx(1) = min(allFlux);
+            rangeFluxFx(2) = max(allFlux);
+            rangeFluxFx = diff(rangeFluxFx);
+            psiOffset = baseScale * rangeFluxFx;
             targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
             contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);

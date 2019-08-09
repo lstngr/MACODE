@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<demos>
+<?xml version="1.0" encoding="utf-8"?><demos>
     <name>Magnetic Configuration</name>
     <type>toolbox</type>
     <icon>HelpIcon.DEMOS</icon>
-    <description>This text appears on the main page for your examples. Hello text.</description>
+    <description>These examples will guide you through the main features of the toolbox.</description>
     <website><a href="matlab:web('mailto:louis.stenger@epfl.ch')">Get help via email (Premium subscribers only)</a></website>
     
     <demosection>
