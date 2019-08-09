@@ -14,6 +14,9 @@
 % * Helper functions to compute more complex properties
 % * Examples showing you how to get started (before you break anything) !
 %
+% Please note the Symbolic Math Toolbox must be installed for this toolbox
+% to run correctly.
+%
 % Using the left pane, you can browse through the documentation using
 % MATLAB(R)'s built-in browser. Especially for functions, you might however
 % prefer to browse their help directly using either the <matlab:doc('doc')

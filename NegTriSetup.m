@@ -63,7 +63,6 @@ demos_path = [script_path,filesep,'docs',filesep,'demos'];
 if ~exist(demos_path,'dir')
     mkdir(demos_path)
 end
-publish([examples_path,filesep,'startPage.m'],'outputDir',docs_path)
 publish([examples_path,filesep,'currents.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'simpleDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
@@ -74,6 +73,14 @@ publish([examples_path,filesep,'configCopy.m'],'outputDir',demos_path);
 publishoptions = struct('format','html','outputDir',demos_path,...
     'figureSnapMethod','entireFigureWindow');
 publish([examples_path,filesep,'parameterScan.m'],publishoptions);
+
+% Publish startpage
+png_path = [demos_path,filesep,'configDivertor_02.png'];
+if exist(png_path,'file')
+    cp_path = [docs_path,filesep,'startImg.png'];
+    copyfile(png_path,cp_path);
+end
+publish([examples_path,filesep,'startPage.m'],'outputDir',docs_path);
 
 % Cleanup
 close all
