@@ -3,6 +3,7 @@
 % handle classes. This means that when assigning a copy of the handle
 % using the equality operator, the content of the object is not actually
 % copied.
+%
 % The |==| operator will behave accordingly and return |true| only when the
 % handles are pointing to the same object in memory (not if the objects'
 % properties are equal).
@@ -29,7 +30,7 @@ end
 % also inherits the |matlab.mixin.Copyable| superclass, which allows a
 % shallow copy of a handle object.
 %
-% The behavior of this copy method is modified such that
+% The behavior of this copy method is modified such that:
 %
 % # When an independent current is passed, the copy method's behavior is
 % similar to the one of the superclass, |matlab.mixin.Copyable|.
@@ -43,7 +44,7 @@ end
 child = currentWire(1,1,1,wire);
 
 %%%%% RULE #2 %%%%%
-fprintf('\nRULE 2\nNumber of children in wire: %u\n',numel(wire.Children))
+fprintf('\nRULE 2\nNumber of children in ''wire'': %u\n',numel(wire.Children))
 % Make a copy of the child
 childCopy = copy(child);
 % Check child and childCopy parents are the same
@@ -51,13 +52,13 @@ if child.Parent == childCopy.Parent
     disp('Handles ''child'' and ''childCopy'' have the same parent.')
 end
 % Parent knows about the two children
-fprintf('Number of children in wire: %u\n\n',numel(wire.Children))
+fprintf('Number of children in ''wire'': %u\n\n',numel(wire.Children))
 
 %%%%% RULE #3 %%%%%
 % Make a copy of the parent
 wireCopy = copy(wire);
 % We check that the copied current is different from the original.
-% But, both wire and wireCopy point to the same child, which wasn't copied!
+% We check that their children were also copied.
 if wireCopy ~= wire && wireCopy.Children(1) ~= wire.Children(1)
     fprintf(['RULE 3\nHandles ''wireCopy'' and ''wire'' are different, ',...
         'and so are their children!\n'])
@@ -67,16 +68,14 @@ end
 % The copy behavior of magnetic configuration (mConf) objects is very
 % similar to the one of the currents, with a slight exception.
 %
-% An mConf object expects to be instanciated with a closed set of currents,
-% which means that if some currents depend on a parent current, this
-% current is mandatorily included in the aforementionned set of currents.
+% An mConf object expects to be instanciated with a "closed set" of
+% currents, which means that if some currents depend on a parent current,
+% this current mandatorily needs to be included in the array that will be
+% passed to the mConf constructor.
 %
 % By recursion, one can see that some of the included currents for mConf
 % will be independent, and the rest of the passed currents will depend on
 % them directly, or through multiple children.
-%
-% However, while parent currents are always included, some of their
-% children may not.
 
 cur_root = currentGaussian(0,0,1,1); % Root current
 cur_root.isPlasma = true;
@@ -94,11 +93,12 @@ catch ME
 end
 
 %%
-% Thus, the mConf copy behavior can be simplified a bit. It will first look for
-% independent currents and copy those first.
-% During this operation, all children of those root currents (including
-% unnecessary ones for the configuration at hand) will also be copied.
-%
+% Thus, the mConf copy behavior can be simplified a bit. It will first look
+% for independent currents and copy those first. _However_, while parent
+% currents are always included, some of their children may not. During the
+% copy operation, all children of those root currents (including
+% unnecessary ones for the configuration at hand) will firstly also be
+% copied.
 % The second step consists in iterating over the original configuration's
 % currents, and identify which original child of the root currents
 % corresponds to which newly created child.
@@ -107,6 +107,17 @@ end
 % match the original object's.
 
 config_copy = copy(goodConfig);
+
+%%
+% Inspect original currents array,
+goodConfig.currents
+
+%%
+% Do the same for copied configuration,
+config_copy.currents
+
+%%
+% We can also make sure these objects are different in memory.
 disp('Are the copied currents the same in memory?')
 disp(goodConfig.currents == config_copy.currents)
 

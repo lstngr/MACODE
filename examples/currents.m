@@ -14,7 +14,7 @@
 % a current instance will point to the same data, much like figure handles.
 % The interested reader may refer to the MATLAB(R) documentation on
 % <matlab:web(fullfile(docroot,'matlab/ref/handle-class.html')) handle classes>.
-% Two classes implementing a concrete current distribution are available,
+% Two classes implementing a concrete current distribution are available:
 %
 % * <matlab:doc('currentWire') currentWire>: A $\delta$ distributed
 % current, on which we will first focus below.
@@ -87,7 +87,7 @@ box on
 %   child = currentWire( x, y, c, wire );
 %
 % Now, |c| will behave as a proportionality factor between the two
-% currents, that is, the current in |child| is half the current running
+% currents, that is, the current in |child| is |c| times the current running
 % through |wire|. To access this current outside the class, one uses the
 % <matlab:doc('current/curr') curr> property.
 %
@@ -130,7 +130,7 @@ disp(['child.curr= ',num2str(child.curr)])
 %
 %   gauss = currentGaussian( x, y, c, sigma );
 %
-% The current distribution is given by
+% The current distribution (which is not normalized) is given by
 %
 % $$j(\vec{x}) = c\exp{\frac{-(\vec{x}-\vec{x}_0)^2}{2\sigma^2}}$$
 %

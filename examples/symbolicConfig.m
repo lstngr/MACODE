@@ -8,12 +8,12 @@
 % <matlab:doc('current') current> and <matlab:doc('mConf') mConf> classes.
 
 %% Create a Symbolic System
-% Suppose we want to replicate the simple divertor configuration once
-% again, but start from fully symbolic expressions. We need to define two
-% currents, the plasma's and a divertor one, including only symbolic
-% variables. The currents can then be passed to a configuration object.
-% Note that the constructors are exactly the same as when working with
-% numerical variables.
+% Suppose we want to replicate the <configDivertor.html simple divertor
+% configuration> once again, but start from fully symbolic expressions. We
+% need to define two currents, the plasma and a divertor one, including
+% only symbolic variables. The currents can then be passed to a
+% configuration object. Note that the constructors are exactly the same as
+% when working with numerical variables.
 
 % Define symbolic variables
 xc  = sym('xc',[1,2],'real');   % Current locations (x)
@@ -22,30 +22,37 @@ cI  = sym('cI',[1,2],'real');   % Current intensities (I)
 sgm = sym('sgm','real');        % Gaussian extension of the plasma current
 R   = sym('R','real');          % Tokamak major radius
 
+%%
+% To learn more about symbolic objects in MATLAB(R), you may refer to the
+% Symbolic Math Toolbox's <matlab:doc('symbolic') documentation>.
+
 % Create currents
 plasma = currentGaussian(xc(1),yc(1),cI(1),sgm);
 plasma.isPlasma = true;
 divertor = currentWire(xc(2),yc(2),cI(2),plasma);
 
 % Create configuration
-clear config % Make sure workspace is clean
 config = mConf(R, [plasma,divertor]);
 
 %% Obtain Field Equations from the Divertor
-% Now that the currents and configuration are initialized, we may start
-% by querying the magnetic structure of the divertor current. Instead of
-% calling its |magFieldX/Y| and |fluxFx| methods, we call methods returning
-% a symbolic form of the former functions evaluated at symbolic coordinate
-% $(x,y)$. Below, we print the magnetic field components and poloidal flux
-% function of the divertor current.
-% Note the dependency on the plasma current coefficient |cI1|!
+% Now that the currents and configuration are initialized, we may start by
+% querying the magnetic structure of the divertor current. Instead of
+% calling its <matlab:doc('currentWire/magFieldX') currentWire/magFieldX>,
+% <matlab:doc('currentWire/magFieldY') currentWire/magFieldY> and
+% <matlab:doc('currentWire/fluxFx') currentWire/fluxFx> methods, we call
+% methods returning a symbolic form of the former functions evaluated at
+% symbolic coordinates $(x,y)$.
 
-% Obtain field equations
+% Obtain field equations at point (x,y)
 bx = divertor.symMagFieldX;
 by = divertor.symMagFieldY;
 fx = divertor.symFluxFx(R);
 
-% Display these
+%%
+% Below, we print the magnetic field components and poloidal flux function
+% of the divertor current. Note the dependency of the divertor current on
+% the plasma current coefficient |cI1|!
+
 disp(['Bx = ',char(bx)])
 disp(['By = ',char(by)])
 disp(['Fx = ',char(fx)])
@@ -54,7 +61,8 @@ disp(['Fx = ',char(fx)])
 % Note that symbolic variables with string |x| and |y| _must not_
 % have been included in the variables from the former paragraph to avoid
 % mixups. If you wish to use other characters than |x/y| for the evaluation
-% point of the functions, consider the following code.
+% point of the functions, consider the following code, where the field is
+% evaluated at symbolic coordinates (xreq,yreq).
 %
 %   target_x = sym('xreq','real');
 %   target_y = sym('yreq','real');
@@ -107,28 +115,29 @@ lY = Y(1:step:end,1:step:end);
 %%
 % Assuming the magnetic field expressions are not too complex, one can use
 % the symbolic toolbox to generate inline function handles. We indicate
-% |matlabFunction| that the handle should have two inputs, being the two
-% coordinates that we did not replace yet.
+% <matlab:doc('matlabFunction') matlabFunction> that the handle should have
+% two inputs, being the two coordinates that we did not replace yet.
 x = sym('x','real');
 y = sym('y','real');
 hbx = matlabFunction(bx,'Vars',[x,y]);
 hby = matlabFunction(by,'Vars',[x,y]);
 
 %%
-% The flux function is however trickier. Since the plasma current
-% includes an exponential integral term, |matlabFunction| will fail to
-% build a function handle. This is likely cause by a mix-up between
-% MATLAB(R)'s |expint| function, which is defined differently in the
-% symbolic toolbox.
+% The flux function is however trickier. Since the plasma current includes
+% an exponential integral term, <matlab:doc('matlabFunction')
+% matlabFunction> will fail to build a function handle. This is likely
+% caused by a mix-up between MATLAB(R)'s <matlab:doc('expint') expint>
+% function, which is defined differently in the
+% <matlab:doc('symbolic/expint') symbolic toolbox>.
 %
-% Instead of requesting a function handle, we use |vpa| to get a numerical
-% approximation of the |expint| term, and subsitute the coordinates with
-% the meshgrid created earlier.
+% Instead of requesting a function handle, we use <matlab:doc('vpa') vpa>
+% to get a numerical approximation of the exponential integral term, and
+% subsitute the coordinates with the meshgrid created earlier.
 nfx = subs(vpa(fx),{x,y},{X,Y});
 
 %%
-% In general, however, this approach should be avoided as the performance
-% is poor during substitution.
+% In general, however, large substitutions should be avoided as their
+% performance is poor.
 %
 % The configuration can now be plotted using standard commands. The simple
 % divertor configuration is retrieved.
@@ -154,12 +163,14 @@ axis image
 config.checkCommit
 
 %%
-% If a commit can be performed, |Avail| is returned. When a commit has
-% already been requested, and that the magnetic structure didn't undergo
-% changes, |Done| is returned.
+% If a commit can be performed, <matlab:doc('commitState/NotAvail')
+% NotAvail> is returned. When a commit has already been requested, and that
+% the magnetic structure didn't undergo changes,
+% <matlab:doc('commitState/Done') Done> is returned.
 %
-% In our case, |NotAvail| prevents any commit attempt due to symbolic
-% variables. If you try to commit anyway, an error is thrown.
+% In our case, <matlab:doc('commitState/NotAvail') NotAvail> prevents any
+% commit attempt due to symbolic variables. If you try to commit anyway, an
+% error is thrown.
 try
     config.commit;
 catch ME
