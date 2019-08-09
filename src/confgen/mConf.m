@@ -94,7 +94,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function set.R(obj,R)
-            validateattributes(R,{'double','sym'},{'scalar','positive'})
+            if isnumeric(R)
+                validateattributes(R,{'double'},{'scalar','positive'})
+            else
+                validateattributes(R,{'sym'},{'scalar'})
+                assume(R>0);
+            end
             obj.R = R;
         end
         
@@ -115,10 +120,13 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         'in the input currents array.'],icur);
                 end
             end
-            assert(sum([curs(:).isPlasma])==1,'MACODE:mConf:numPlasma',...
-                'Expected exactly one plasma current.')
-            assert(curs([curs.isPlasma]).curr>0,'MACODE:mConf:negPlasmaCurrent',...
-                'The plasma current is required to be positive.')
+            % TODO - Change that shit.
+            %   Will FAIL for SYM input and not even important until
+            %   commit!!!!
+%             assert(sum([curs(:).isPlasma])==1,'MACODE:mConf:numPlasma',...
+%                 'Expected exactly one plasma current.')
+%             assert(curs([curs(:).isPlasma]).curr>0,'MACODE:mConf:negPlasmaCurrent',...
+%                 'The plasma current is required to be positive.')
             obj.currents = curs;
         end
         

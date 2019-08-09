@@ -55,7 +55,12 @@ classdef currentGaussian < current
         function flx = fluxFx(obj,x,y,R)
             validateattributes(x,{'double','sym'},{'real'},'currentGaussian/fluxFx','x')
             validateattributes(y,{'double','sym'},{'real'},'currentGaussian/fluxFx','y')
-            validateattributes(R,{'double','sym'},{'real','positive'},'currentGaussian/fluxFx','R')
+            if isnumeric(R)
+                validateattributes(R,{'double'},{'real','positive'},'currentGaussian/fluxFx','R')
+            else
+                validateattributes(R,{'sym'},{'real'},'currentGaussian/fluxFx','R')
+                assume(R>0);
+            end
             assert(isequal(size(x),size(y)),'MACODE:dimagree','Matrix dimensions must agree.')
             dx = x - obj.x;
             dy = y - obj.y;
