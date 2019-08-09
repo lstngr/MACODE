@@ -236,15 +236,36 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             elseif state == commitState.NotAvail
                 error(msgid,reason)
             end
-            obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
-            % Psi Separatrix and LCFS
-            obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
-                obj.xpoints(:,2));
-            obj.lcfsDetec(p.Results.OffsetScale);
-            % Find core location
-            obj.coreDetec;
-            % Compute geometrical properties
-            obj.computeMagR(p.Results.OffsetScale);
+            % Attempt to commit and catch errors
+            try
+                % X-Point detection
+                obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
+                % Psi Separatrix and LCFS
+                obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
+                    obj.xpoints(:,2));
+                obj.lcfsDetec(p.Results.OffsetScale);
+                % Find core location
+                obj.coreDetec;
+                % Compute geometrical properties
+                obj.computeMagR(p.Results.OffsetScale);
+            catch ME
+                % If error is recognized, add a suggestion on how to solve
+                % the issue where possible.
+                if strcmp(ME.identifier,'MACODE:mConf:noSeparatrix')
+                    ME.message = [ME.message,...
+                        '\nSuggested Action: Check simArea and commit again with more tries.'];
+                elseif strcmp(ME.identifier,'MACODE:mConf:noContourLCFS')
+                    ME.message = [ME.message,...
+                        '\nSuggested Action: Check simArea. ',...
+                        'If repeated commits fail, try to adjust OffsetScale.'];
+                elseif strcmp(ME.identifier,'MACODE:mConf:manyLCFS')
+                    ME.message = [ME.message,'\nSuggested Action: ',...
+                        'Crop the considered domain using simArea.'];
+                elseif strcmp(ME.identifier,'MACODE:unexpected')
+                    ME.message = ['Unexpected Behavior: ',ME.message];
+                end
+                rethrow(ME);
+            end
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -403,8 +424,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function p = get.psi95(obj)
             assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
-                'Could not find separatrix. Were x-points correctly detected?\n',...
-                'Suggested action: Commit the configuration again.');
+                'Could not find separatrix. Were x-points correctly detected?');
             assert(~isempty(obj.corePosition),'MACODE:mConf:noMagneticAxis',...
                 'Could not find magnetic axis. Was the center correctly detected?',...
                 'Suggested action: Commit the configuration again.');
@@ -430,7 +450,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function a = get.a(obj)
             assert(~isempty(obj.magR),'MACODE:mConf:noMagR',...
-                ['Could not find configuration''s radiuses. Did the last commit finish successfully?\n',...
+                ['Could not find configuration''s radiuses. Was the LCFS detected?\n',...
                 'Suggested action: Commit the configuration again.']);
             a = (obj.magR.Rmax - obj.magR.Rmin)/2;
         end
@@ -454,8 +474,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % Get target psi's, but need a psi offset which we compute
             assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
-                'Could not find separatrix. Were x-points correctly detected?\n',...
-                'Suggested action: Commit the configuration again.');
+                'Could not find separatrix. Were x-points correctly detected?');
             baseScale = 5e-5 * offsetScale; % Arbitrary shift to select contour
             Points(1) = 100; % # of sample points on grid
             w = obj.simArea(3)-obj.simArea(1);
@@ -482,8 +501,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             S = extract_contourc(C);
             S = removeOpenContours(S);
             assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
-                ['Detection of a LCFS surface contour failed.\n',...
-                'Suggested action: Adjust offsetScale, or commit again.']);
+                'Detection of a LCFS surface contour failed.');
             % Maximum available value of Psi must be LCFS
             obj.lcfsPsi = max(S.level)+psiOffset;
         end
@@ -491,9 +509,9 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         function computeMagR(obj,offsetScale)
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
-            assert(~isempty(obj.lcfsPsi),'MACODE:mConf:noLCFS',...
-                'Could not find LCFS. Did it''s detection complete successfully?\n',...
-                'Suggested action: Commit the configuration again.');
+            assert(~isempty(obj.lcfsPsi),'MACODE:unexpected',...
+                'Could not find LCFS.\n',...
+                'Previously called method from mConf/commit should have thrown.');
             % Compute psi offset
             baseScale = 5e-5 * offsetScale;
             psiOffset = baseScale * range([obj.lcfsPsi,...
@@ -508,9 +526,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
             S = extract_contourc(C);
             S = removeOpenContours(S);
-            assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
+            assert(~isempty(S),'MACODE:unexpected',...
                 ['Detection of a LCFS surface contour failed.\n',...
-                'Suggested action: Adjust offsetScale, or commit again.']);
+                'This is likely caused by non-consistent behavior of contourc.']);
+            % NOTE - Following check is required since lcfsDetec could not
+            % reason about the core, and might have exited with 2+ closed
+            % contours that were detected
             if(numel(S)>1)
                 % Multiple closed contours, find one enclosing core
                 corein = false(1,numel(S));
@@ -522,9 +543,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                 % TODO - Could compute which enclosing surface has a
                 % point closest to the magnetic axis...
                 assert(numel(S)==1,'MACODE:mConf:manyLCFS',...
-                    ['Many LCFS level contours enclosing the magnetic axis were found.\n',...
-                    'This is likely due to your simulation area being too large.',...
-                    'Suggested action: Crop domain and commit again.']);
+                    ['Many LCFS level contours enclosing the magnetic center were found.\n',...
+                    'This is likely due to your simulation area being too large.']);
             end
             xmax = max(S.x); [~,iymax] = max(S.y);
             xmin = min(S.x); [~,iymin] = min(S.y);
@@ -561,8 +581,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         pts(i,:) = NaN;
                     end
                 elseif numel(sol.x)>1
-                    error('MACODE:mConf:multiVPASolve',...
-                        'Unexpected behavior: Two null points were returned by vpasolve.')
+                    error('MACODE:unexpected',...
+                        'Two null points were returned by vpasolve.')
                 else
                     % If no solutions, fill with NaN
                     pts(i,:) = NaN;
@@ -588,8 +608,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             bx = obj.symMagFieldX;
             by = obj.symMagFieldY;
             sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
-            assert(numel(sol.x)==1,'MACODE:mConf:multiVPASolve',...
-                'Unexpected behavior: Two null points were returned by vpasolve.')
+            assert(numel(sol.x)==1,'MACODE:unexpected',...
+                'Two null points were returned by vpasolve.')
             obj.corePosition = double([sol.x,sol.y]);
         end
         
