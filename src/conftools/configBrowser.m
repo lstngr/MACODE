@@ -70,10 +70,9 @@ assert(isequal(simArea{:}),'MACODE:mConf:nonEquiv',...
     'Provided configurations must have equal simArea limits.')
 
 % Configurations should all be commitable
-states = arrayfun(@checkCommit,obj,'UniformOutput',false);
-states = [states{:}];
-assert(all(states~=commitState.NotAvail),'MACODE:mConf:commitSym',...
-    'Provided configurations depend on symbolic variablesand can''t be committed.')
+[~,~,msgid] = arrayfun(@checkCommit,obj,'UniformOutput',false);
+assert(all(~strcmp('MACODE:mConf:commitSym',msgid)),'MACODE:mConf:commitSym',...
+    'Provided configurations depend on symbolic variables and can''t be committed.')
 
 % Configurations should have same amount of currents
 ncur = arrayfun(@(x)numel(x{1}),{obj.currents});
@@ -122,12 +121,15 @@ addlistener(pslider, 'Value', 'PostSet', @(src,evnt)setScanp(pslider));
 retryBt = uicontrol('Style','pushbutton','String','Re-commit',...
     'Position',[50,250,150,30],'Enable','off','Parent',panelF,'Callback',@retryCommit);
 resetBt = uicontrol('Style','pushbutton','String','Reset','Min',min(pval)+0.5*range(pval),...
-    'Max',min(pval)+0.5*range(pval),'Position',[50,200,150,30],'Enable','off',...
+    'Max',min(pval)+0.5*range(pval),'Position',[50,210,150,30],'Enable','off',...
     'Parent',panelF,'Callback',@setScanp);
 updateBt =uicontrol('Style','pushbutton','String','Update','Value',0,'Min',0,'Max',0,...
-    'Position',[50,150,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
+    'Position',[50,170,150,30],'Enable','off','Parent',panelF,'Callback',@updateConfig);
+commitBt = uicontrol('Style','togglebutton','String',{'Enable Commits'},...
+    'Value',double(obj.checkCommit==commitState.Avail),'Min',0,'Max',1,...
+    'Position',[50,130,150,30],'Enable','off','Parent',panelF,'Callback',@(~,~)lockPanel(false));
 pvaltxt = uicontrol('Style','text','String',['p=',num2str(scanp)],...
-    'Position',[50,100,150,30],'Fontsize',16,'Parent',panelF);
+    'Position',[50,90,150,30],'Fontsize',16,'Parent',panelF);
 trigtxt = annotation(gcf,'textbox','String',...
     {'$\delta_{\phantom{upper}}=$','$\delta_{upper}=$','$\delta_{lower}=$'},...
     'Units','pixels','Position',[50,30,150,60],'Fontsize',12,'Interpreter','latex');
@@ -159,18 +161,32 @@ end
             retryBt.Enable = 'off';
             resetBt.Enable = 'off';
             updateBt.Enable= 'off';
+            commitBt.Enable= 'off';
         else
             statetxt.String = 'Ready';
             pslider.Enable = 'on';
-            retryBt.Enable = 'on';
             resetBt.Enable = 'on';
             updateBt.Enable= 'on';
+            state = obj.checkCommit;
+            if state==commitState.NotAvail
+                commitBt.Enable= 'off';
+                retryBt.Enable = 'off';
+            elseif ~commitBt.Value
+                commitBt.Enable= 'on';
+                retryBt.Enable = 'off';
+            else
+                commitBt.Enable= 'on';
+                retryBt.Enable = 'on';
+            end
             pslider.Value = scanp;
-            if obj.checkCommit==commitState.Done
+            if state==commitState.Done && commitBt.Value
                 [m,u,l] = triangularity(obj);
                 trigtxt.String = {['$\delta_{\phantom{upper}}=',num2str(m),'$'],...
                     ['$\delta_{upper}=',num2str(u),'$'],...
                     ['$\delta_{lower}=',num2str(l),'$']};
+            else
+                trigtxt.String = {'$\delta_{\phantom{upper}}=$',...
+                    '$\delta_{upper}=$','$\delta_{lower}=$'};
             end
         end
         drawnow;
@@ -187,7 +203,9 @@ end
             obj.currents(iicur).curr = cr;
         end
         try
-            obj.commit(ntry,ntry,'Force',true);
+            if obj.checkCommit ~= commitState.NotAvail && commitBt.Value
+                obj.commit(ntry,ntry,'Force',true);
+            end
         catch ME
             lockPanel(false);
             rethrow(ME)
@@ -202,7 +220,9 @@ end
         setScanp(pslider);
         lockPanel(true);
         try
-            obj.commit(ntry,ntry,'Force',true);
+            if obj.checkCommit ~= commitState.NotAvail && commitBt.Value
+                obj.commit(ntry,ntry,'Force',true);
+            end
         catch ME
             lockPanel(false);
             rethrow(ME)
@@ -222,9 +242,11 @@ end
             scatter(ax,obj.currents(iicur).x,obj.currents(iicur).y,75,...
                 'o','filled','MarkerFaceColor',cols(iicur,:))
         end
-        scatter(ax,obj.xpoints(:,1),obj.xpoints(:,2),40,...
-            'o','filled','MarkerFaceColor','w')
-        contour(ax,X,Y,obj.fluxFx(X,Y),'-k','LevelList',obj.separatrixPsi)
+        if obj.checkCommit ~= commitState.NotAvail && commitBt.Value
+            scatter(ax,obj.xpoints(:,1),obj.xpoints(:,2),40,...
+                'o','filled','MarkerFaceColor','w')
+            contour(ax,X,Y,obj.fluxFx(X,Y),'-k','LevelList',obj.separatrixPsi)
+        end
         contour(ax,X,Y,obj.fluxFx(X,Y),10,'--k')
         hold(ax,'off')
         axis(ax,'image')
