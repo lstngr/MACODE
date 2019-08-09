@@ -28,7 +28,12 @@ classdef currentGaussian < current
         end
         
         function set.sigma(obj,s)
-            validateattributes(s,{'double','sym'},{'scalar'})
+            if isnumeric(s)
+                validateattributes(s,{'double'},{'scalar','positive'})
+            else
+                validateattributes(s,{'sym'},{'scalar'})
+                assume( s>0 );
+            end
             obj.sigma = s;
         end
         

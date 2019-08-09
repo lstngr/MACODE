@@ -143,5 +143,5 @@ for iconf=1:numel(scanp)
     confs(iconf).simArea = [0,Lx;0,Ly];
 end
 
-% Plots configurations, we use the default of 5 tries to detect x-points
-config = configBrowser(confs,scanp);
+% Plots configurations, we use a margin of 10 tries to detect x-points
+config = configBrowser(confs,scanp,10);

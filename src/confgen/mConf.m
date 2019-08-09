@@ -120,17 +120,10 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         'in the input currents array.'],icur);
                 end
             end
-            % TODO - Change that shit.
-            %   Will FAIL for SYM input and not even important until
-            %   commit!!!!
-%             assert(sum([curs(:).isPlasma])==1,'MACODE:mConf:numPlasma',...
-%                 'Expected exactly one plasma current.')
-%             assert(curs([curs(:).isPlasma]).curr>0,'MACODE:mConf:negPlasmaCurrent',...
-%                 'The plasma current is required to be positive.')
             obj.currents = curs;
         end
         
-        function state = checkCommit(obj)
+        function [state,reason,msgid] = checkCommit(obj)
             % CHECKCOMMIT Checks if mConf.commit can be called
             %   s = CHECKCOMMIT(obj) checks if a magnetic configuration can
             %   be committed, and, in the subsequent case, if a commit is
@@ -141,9 +134,26 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % By default, forbid commit
             state = commitState.NotAvail;
+            reason = [];
+            msgid  = [];
             % Check no symbolic expressions are found
             xr = num2cell(rand(1,2));
             if isa(obj.magFieldX(xr{:}),'sym') || isa(obj.magFieldY(xr{:}),'sym') || isa(obj.fluxFx(xr{:}),'sym')
+                msgid  = 'MACODE:mConf:commitSym';
+                reason = ['Magnetic structure depends on symbolic variables. ',...
+                    'You cannot commit such a configuration.'];
+                return;
+            end
+            % Check if exactly on plasma current is set, and its sign is
+            % positive
+            curs = obj.currents;
+            if sum([curs(:).isPlasma])~=1
+                reason = 'Expected exactly one plasma current.';
+                msgid  = 'MACODE:mConf:numPlasma';
+                return;
+            elseif curs([curs(:).isPlasma]).curr<=0
+                reason = 'The plasma current is required to be positive.';
+                msgid = 'MACODE:mConf:negPlasmaCurrent';
                 return;
             end
             % Check if previous commit was done
@@ -152,6 +162,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
                 if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) )
                     state = commitState.Done;
+                    msgid = 'MACODE:mConf:commitExists';
+                    reason = 'Magnetic structure unchanged since last commit.';
                     return;
                 end
             end
@@ -217,16 +229,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Commit configuration as it is loaded and compute stuff
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
-            state = obj.checkCommit;
+            [state,reason,msgid] = obj.checkCommit;
             if state == commitState.Done && ~p.Results.Force
-                warning('MACODE:mConf:commitExists',...
-                    ['Magnetic structure unchanged since last commit. ',...
-                    'You can force the commit with ''Force'' set to true.'])
+                warning(msgid, [reason,'\nYou can force the commit with ''Force'' set to true.'])
                 return;
             elseif state == commitState.NotAvail
-                error('MACODE:mConf:commitSym',...
-                    ['Magnetic structure depends on symbolic variables. ',...
-                    'You cannot commit such a configuration.'])
+                error(msgid,reason)
             end
             obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
             % Psi Separatrix and LCFS
