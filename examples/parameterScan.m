@@ -145,3 +145,5 @@ end
 
 % Plots configurations, we use a margin of 10 tries to detect x-points
 config = configBrowser(confs,scanp,10);
+
+displayEndOfDemoMessage(mfilename)

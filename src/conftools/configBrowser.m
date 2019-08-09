@@ -47,6 +47,7 @@ assert(nobj>1,'MACODE:func:incorrectNumel',...
 
 defaultScanP = linspace(-1,1,nobj);
 defaultNTry = 5;
+defaultCommitParams = {defaultNTry,defaultNTry,'Force',true};
 defaultDelete = true;
 
 p = inputParser;
@@ -54,12 +55,55 @@ addOptional(p,'ScanP',defaultScanP,...
     @(x)validateattributes(x,{'double'},{'vector','increasing','numel',nobj},st.name,'p',2))
 addOptional(p,'Retries',defaultNTry,...
     @(x)validateattributes(x,{'double'},{'positive','scalar','integer'},st.name,'r',3))
+addParameter(p,'CommitParams',defaultCommitParams,...
+    @(x)validateattributes(x,{'cell'},{'nonempty','row'},st.name,'CommitParams'))
 addParameter(p,'DeleteSample',defaultDelete,...
     @(x)validateattributes(x,{'logical'},{'scalar'},st.name,'DeleteSample'))
 parse(p,varargin{:})
 
 pval = p.Results.ScanP;
 ntry = p.Results.Retries;
+commitParams = p.Results.CommitParams;
+
+forcedCommits = true;
+
+if any(strcmp('CommitParams',p.UsingDefaults)) && ...
+        all(~strcmp('Retries',p.UsingDefaults))
+    % Using default commit parameters, 'Retries' takes precedence
+    commitParams(1:2) = {ntry,ntry};
+elseif all(~strcmp('CommitParams',p.UsingDefaults)) && ...
+        any(strcmp('Retries',p.UsingDefaults))
+    % User passed specific parameters, but no retries, they have precedence of 'Retries'
+    if isempty(commitParams)
+        commitParams = defaultCommitParams(3:4);
+    else
+        strlocs = cellfun(@ischar,commitParams);
+        idx = strfind( commitParams(strlocs), 'Force' );
+        idx = find(not(cellfun(@isempty,idx)));
+        [~,stridx] = find(strlocs);
+        if isempty(idx)
+            % Commits are forced unless explicitely disabled
+            commitParams(end+1:end+2) = {'Force',true};
+        else
+            % User passed 'Force', check if he disabled it and issue a
+            % warning if so is the case
+            assert(numel(idx)==1,'MACODE:invalidArguments',...
+                'Flag ''Force'' was passed multiple times in ''CommitParams''')
+            assert(numel(commitParams)>stridx(idx),'MACODE:missingArgument',...
+                'Expected flag ''Force'' to be followed by a logical value.')
+            assert(islogical(commitParams{stridx(idx)+1}),'MACODE:invalidArgument',...
+                'Expected flag ''Force'' to be followed by a logical value.')
+            if ~commitParams{stridx(idx)+1}
+                warning('MACODE:configBrowser:noReCommit',...
+                    ['You set the ''Force'' option to false in ''CommitParams''.\n',...
+                    'By default, this behavior is enabled, passing false ',...
+                    'disabled the ''Re-commit'' functionality.'])
+                forcedCommits = false;
+            end
+        end
+    end
+end
+
 deleteSamples = p.Results.DeleteSample;
 
 % Configurations should have same major radius and simulated area
@@ -171,7 +215,7 @@ end
             if state==commitState.NotAvail
                 commitBt.Enable= 'off';
                 retryBt.Enable = 'off';
-            elseif ~commitBt.Value
+            elseif ~commitBt.Value || ~forcedCommits
                 commitBt.Enable= 'on';
                 retryBt.Enable = 'off';
             else
@@ -204,7 +248,7 @@ end
         end
         try
             if obj.checkCommit ~= commitState.NotAvail && commitBt.Value
-                obj.commit(ntry,ntry,'Force',true);
+                obj.commit(commitParams{:});
             end
         catch ME
             lockPanel(false);
@@ -221,7 +265,7 @@ end
         lockPanel(true);
         try
             if obj.checkCommit ~= commitState.NotAvail && commitBt.Value
-                obj.commit(ntry,ntry,'Force',true);
+                obj.commit(commitParams{:});
             end
         catch ME
             lockPanel(false);
