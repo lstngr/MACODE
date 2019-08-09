@@ -249,22 +249,24 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                 % Compute geometrical properties
                 obj.computeMagR(p.Results.OffsetScale);
             catch ME
+                % Caught an error, must terminate commit
                 % If error is recognized, add a suggestion on how to solve
                 % the issue where possible.
+                errMsg = 'Commit was aborted (see cause).';
                 if strcmp(ME.identifier,'MACODE:mConf:noSeparatrix')
-                    ME.message = [ME.message,...
+                    errMsg = [errMsg,...
                         '\nSuggested Action: Check simArea and commit again with more tries.'];
                 elseif strcmp(ME.identifier,'MACODE:mConf:noContourLCFS')
-                    ME.message = [ME.message,...
+                    errMsg = [errMsg,...
                         '\nSuggested Action: Check simArea. ',...
                         'If repeated commits fail, try to adjust OffsetScale.'];
                 elseif strcmp(ME.identifier,'MACODE:mConf:manyLCFS')
-                    ME.message = [ME.message,'\nSuggested Action: ',...
+                    errMsg = [errMsg,'\nSuggested Action: ',...
                         'Crop the considered domain using simArea.'];
-                elseif strcmp(ME.identifier,'MACODE:unexpected')
-                    ME.message = ['Unexpected Behavior: ',ME.message];
                 end
-                rethrow(ME);
+                commitME = MException('MACODE:mConf:failCommit',errMsg);
+                commitME = addCause(commitME,ME);
+                throw(commitME);
             end
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
@@ -510,7 +512,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
             assert(~isempty(obj.lcfsPsi),'MACODE:unexpected',...
-                'Could not find LCFS.\n',...
+                'Unexpected Behavior: Could not find LCFS.\n',...
                 'Previously called method from mConf/commit should have thrown.');
             % Compute psi offset
             baseScale = 5e-5 * offsetScale;
@@ -527,7 +529,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             S = extract_contourc(C);
             S = removeOpenContours(S);
             assert(~isempty(S),'MACODE:unexpected',...
-                ['Detection of a LCFS surface contour failed.\n',...
+                ['Unexpected Behavior: Detection of a LCFS surface contour failed.\n',...
                 'This is likely caused by non-consistent behavior of contourc.']);
             % NOTE - Following check is required since lcfsDetec could not
             % reason about the core, and might have exited with 2+ closed
@@ -582,7 +584,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                     end
                 elseif numel(sol.x)>1
                     error('MACODE:unexpected',...
-                        'Two null points were returned by vpasolve.')
+                        'Unexpected Behavior: Two null points were returned by vpasolve.')
                 else
                     % If no solutions, fill with NaN
                     pts(i,:) = NaN;
@@ -609,7 +611,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             by = obj.symMagFieldY;
             sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
             assert(numel(sol.x)==1,'MACODE:unexpected',...
-                'Two null points were returned by vpasolve.')
+                'Unexpected Behavior: Two null points were returned by vpasolve.')
             obj.corePosition = double([sol.x,sol.y]);
         end
         
