@@ -50,6 +50,10 @@ contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
 scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
+xlabel('$x$','Fontsize',14,'Interpreter','latex')
+ylabel('$y$','Fontsize',14,'Interpreter','latex')
+title('Poloidal Flux, $\psi$','Interpreter','latex')
+colorbar
 axis image
 
 %% Common problems
@@ -101,6 +105,8 @@ contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
 scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
+xlabel('$x$','Fontsize',14,'Interpreter','latex')
+ylabel('$y$','Fontsize',14,'Interpreter','latex')
 axis image
 title('Too few X asked')
 
@@ -113,6 +119,8 @@ contour(X,Y,config.fluxFx(X,Y),'-k','LevelList',config.separatrixPsi)
 scatter(config.xpoints(:,1),config.xpoints(:,2),40,'ro','filled')
 scatter(config.corePosition(1),config.corePosition(2),40,'go','filled')
 hold off
+xlabel('$x$','Fontsize',14,'Interpreter','latex')
+ylabel('$y$','Fontsize',14,'Interpreter','latex')
 axis image
 title('Too few solver tries')
 
