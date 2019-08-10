@@ -1,5 +1,5 @@
 function varargout = magShear(obj,npts,target,varargin)
-% SAFETYFACTOR Computes a magnetic configuration's magnetic shear
+% MAGSHEAR Computes a magnetic configuration's magnetic shear
 %   s = MAGSHEAR(obj,n,x) computes the local magnetic shear for a
 %   magnetic configuration object (mConf) along a straight path extending
 %   from the configuratin's center to the point described by coordinates in

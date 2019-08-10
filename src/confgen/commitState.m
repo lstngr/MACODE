@@ -1,7 +1,7 @@
 classdef commitState < single
     % COMMITSTATE Status of a mConf commit
     %   Enumartion class indicating whether a mConf object can safely be
-    %   commit. It inherits from the single datatype and can thus be mappe
+    %   commit. It inherits from the single datatype and can thus be mapped
     %   to numerical values.
     %
     %   See also MCONF, SINGLE

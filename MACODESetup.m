@@ -1,12 +1,12 @@
-function NegTriSetup(varargin)
-% NEGTRISETUP Sets up the negative triangularity project
-%   NEGTRISETUP makes sure required scripts and paths are added to MATLAB's
+function MACODESetup(varargin)
+% MACODESetup Sets up the MACODE project
+%   MACODESetup makes sure required scripts and paths are added to MATLAB's
 %   userpath.
 %
-%   NEGTRISETUP('MakeDocs',true) also generates documentation for the
+%   MACODESetup('MakeDocs',true) also generates documentation for the
 %   toolbox.
 
-% TODO - Add other things that NEGTRISETUP might do!
+% TODO - Add other things that MACODESetup might do!
 
 %% Parse varargin
 % Defaults
