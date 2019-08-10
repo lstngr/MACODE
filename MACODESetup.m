@@ -48,7 +48,7 @@ drawnow;
 
 docs_path = [script_path,filesep,'docs'];
 if ~exist(docs_path,'dir')
-    error('MACODE:nonExistentFolder','Documentation folder seems to be missing.')
+    error('MACODE:nonDir','Documentation folder seems to be missing.')
 end
 if ~exist([docs_path,filesep,'m2html'],'dir')
     mkdir([docs_path,filesep,'m2html'])

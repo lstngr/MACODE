@@ -11,8 +11,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         % CURRENTS - Array of current handles
         % This array contains the currents generating the magnetic
-        % configuration. Although the handle cannot be modified after
-        % construction, one may modify currents directly using their
+        % configuration. Although the mConf handle array cannot be modified
+        % after construction, one may modify currents directly using their
         % handles, thus changing the configuration.
         currents = currentWire.empty()
         
@@ -53,22 +53,21 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         a
         
         % PSI95 - Returns 95% of lcfsPsi.
-        % See also lcfsPsi
+        % See also MCONF/LCFSPSI
         psi95
         
-        % SEPARATRIXPSITOL - Filtered values of the flux function at
-        % x-points For perfectly symmetrical configurations displaying two
-        % or more x-points, it might happen that the property separatrixPsi
-        % holds two values, although the x-points are supposed to lie on
-        % the same flux surface. This is a consequence of the achievable
-        % precision of the numerical solving routines employed during a
-        % commit.
+        % SEPARATRIXPSITOL - Filtered values of the flux function at x-points
+        % For perfectly symmetrical configurations displaying two or more
+        % x-points, it might happen that the property separatrixPsi holds
+        % two values, although the x-points are supposed to lie on the same
+        % flux surface. This is a consequence of the achievable precision
+        % of the numerical solving routines employed during a commit.
         %
         % In cases where having duplicate values of the flux function at
         % the separatrix is problematic, SEPARATRIXPSITOL can be requested
         % to filter out duplicate entries in separatrixPsi.
         %
-        % See also SEPARATRIXPSI
+        % See also MCONF/SEPARATRIXPSI
         separatrixPsiTol
     end
     
@@ -84,7 +83,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   to be an array of valid current handles.
             %
             %   The constructor will throw an error if c doesn't hold
-            %   currents, or if any current handle is invalid. A warning
+            %   currents, or if any current handle is invalid. An error
             %   will be issued if a current's parent is missing from the
             %   input array.
             %
@@ -124,7 +123,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function [state,reason,msgid] = checkCommit(obj)
-            % CHECKCOMMIT Checks if mConf.commit can be called
+            % CHECKCOMMIT Checks if mConf/commit can be called
             %   s = CHECKCOMMIT(obj) checks if a magnetic configuration can
             %   be committed, and, in the subsequent case, if a commit is
             %   needed. The function returns a commitState enumeration
@@ -195,13 +194,20 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             %   custom boundaries. By default, the object's mConf/simArea
             %   limits are used.
             %
+            %   COMMIT(...,'OffsetScale',s) can be used when LCFS detection
+            %   fails. Internal routines of a commit will attempt to retrieve
+            %   contour suefaces right next to the LCFS, and try to
+            %   automatically determine a relevant offset. Sometimes, this
+            %   offset is too small and needs to be increased by setting s
+            %   to values larger than 1. Default: 1.
+            %
             %   COMMIT(...,'Force',true) performs a full commit even when
             %   the magnetic structure hasn't been changed. This might be
             %   useful if the previous commit finished without errors, but
             %   failed to perform accurately (missing x-point for example).
             %   Default: false.
             %
-            %   See also SIMAREA
+            %   See also MCONF/SIMAREA
             
             % Define default parameters
             defaultNXPoint = +Inf;
@@ -289,7 +295,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function by = magFieldY(obj,x,y)
-            % MAGFIELDX Y-Component of the magnetic field
+            % MAGFIELDY Y-Component of the magnetic field
             %   by = MAGFIELDY(x,y) returns the y-component of the magnetic
             %   field of the current configuration. x and y are same sized
             %   numerical variables. The ouput variable, by, has the same
@@ -356,7 +362,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function f = symMagFieldX(obj)
             % SYMMAGFIELDX Symbolic expression of the magnetic field
-            %   fx = SYMMSGFIELDX(obj) returns a symbolic expression of the
+            %   fx = SYMMAGFIELDX(obj) returns a symbolic expression of the
             %   x-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
             f = sym(0);
@@ -367,7 +373,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function f = symMagFieldY(obj)
             % SYMMAGFIELDY Symbolic expression of the magnetic field
-            %   fy = SYMMSGFIELDY(obj) returns a symbolic expression of the
+            %   fy = SYMMAGFIELDY(obj) returns a symbolic expression of the
             %   y-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
             f = sym(0);
@@ -626,6 +632,25 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
     
     methods( Access = protected )
         function cp = copyElement(obj)
+            % COPYELEMENT Deep copy of an mConf object
+            %   cp = COPYELEMENT(obj) copies the mConf object obj into a
+            %   new handle, cp. The memory contents of obj and cp are
+            %   different.
+            %
+            %   COPYELEMENT ensures the following rules are satisfied:
+            %       - All properties are copied by value, except currents.
+            %       - Among obj's current array, only the parent currents
+            %       are copied. Due to current class' copy behavior, all
+            %       child currents also get copied.
+            %       - The current arrays of obj and cp hold similar
+            %       currents at the end of the copy (although the handles
+            %       refer to different memory regions). It is possible that
+            %       "supplemental" children, not required by the
+            %       configurations, have been copied, but these won't be
+            %       included in cp.
+            %
+            %   See also CURRENT/COPYELEMENT
+            
             % Start by shallow copy of every property.
             cp = copyElement@matlab.mixin.Copyable(obj);
             % Then, find all independent currents of the class. Dependent

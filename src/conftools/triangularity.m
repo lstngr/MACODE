@@ -7,7 +7,15 @@ function varargout = triangularity(obj)
 %   [t,u,l] = TRIANGULARITY(obj) also returns the upper and lower
 %   triangularities of obj.
 %
-%   See also MCONF
+%   Note that TRIANGULARITY relies on the magR property of mConf, which in
+%   turn is (partially) computed using MATLAB's contour detection
+%   functionalities. In certain cases, configurations you would expect to
+%   be totally symmetrical will display non-zero triangularity due to
+%   numerical "errors" from contour detection. It is recommended to
+%   increase 'OffsetScale' when committing if this behavior needs to be
+%   avoided.
+%
+%   See also MCONF, MCONF/COMMIT
 
 % Check if commit was done
 assert(obj.checkCommit==commitState.Done)

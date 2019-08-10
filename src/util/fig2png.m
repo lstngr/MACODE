@@ -16,7 +16,7 @@ varargout = {};
 
 if nargin==1
     path = varargin{1};
-    assert(exist(path,'dir'));
+    assert(exist(path,'dir'),'mConf:nonDir','Could not find directory: %s',path);
     oldPath = pwd;
     cd(path)
 else
