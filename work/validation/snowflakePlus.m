@@ -1,8 +1,4 @@
-%% SNOWFLAKEPLUS    YEAH
-% YEAYEAYEA
-
 %% Define domain, currents, configuration and plot
-% Like previously
 
 Lx = 660; Ly = 880;
 nx = 330; ny = 440;

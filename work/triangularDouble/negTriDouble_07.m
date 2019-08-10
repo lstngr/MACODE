@@ -1,8 +1,4 @@
-%% NEGTRIDOUBLE     Full double x-point negative triangular configuration
-% YEAYEAYEA
-
 %% Define domain, currents, configuration and plot
-% Like previously
 
 Lx = 600; Ly = 800;
 nx = 300; ny = 400;
