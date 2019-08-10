@@ -1,20 +1,22 @@
-%% Create sample currents
-% CURRENTS is a demonstration script showing how to intialize, use and
-% delete objects deriving from the current class.
+%% Create Sample Currents
+% This demonstration script shows how to intialize, use and delete objects
+% deriving from the current class.
 
 %% Creating a wire
 % All wire objects inherit from the <matlab:doc('current') current> class,
-% which is an <matlab:web(fullfile(docroot,'matlab/matlab_oop/abstract-classes-and-interfaces.html')) abstract class>
-% (meaning you cannot create such an object directly). There is a simple
-% reason for this: the distribution of such a current is not described by
-% this object, and thus, its magnetic field expressions for example are
-% undefined.
+% which is an
+% <matlab:web(fullfile(docroot,'matlab/matlab_oop/abstract-classes-and-interfaces.html'))
+% abstract class> (meaning you cannot create such an object directly).
+% There is a simple reason for this: the distribution of such a current is
+% not described by this object, and thus, its magnetic field expressions
+% for example are undefined.
 %
 % A current, itself, inherits from a _handle_ class, meaning that a copy of
 % a current instance will point to the same data, much like figure handles.
 % The interested reader may refer to the MATLAB(R) documentation on
-% <matlab:web(fullfile(docroot,'matlab/ref/handle-class.html')) handle classes>.
-% Two classes implementing a concrete current distribution are available,
+% <matlab:web(fullfile(docroot,'matlab/ref/handle-class.html')) handle
+% classes>. Two classes implementing a concrete current distribution are
+% available:
 %
 % * <matlab:doc('currentWire') currentWire>: A $\delta$ distributed
 % current, on which we will first focus below.
@@ -27,8 +29,8 @@
 %   wire = currentWire(x,y,c);
 %
 % where |x| and |y| are two scalars describing a 2D position, and |c| a
-% current intensity.
-% Once created, the |wire| variable provides the three relevant functions,
+% current intensity. Once created, the |wire| variable provides the three
+% relevant functions,
 %
 % * <matlab:doc('current/magFieldX') magFieldX>: $x$ component of the
 % magnetic field.
@@ -87,7 +89,7 @@ box on
 %   child = currentWire( x, y, c, wire );
 %
 % Now, |c| will behave as a proportionality factor between the two
-% currents, that is, the current in |child| is half the current running
+% currents, that is, the current in |child| is |c| times the current running
 % through |wire|. To access this current outside the class, one uses the
 % <matlab:doc('current/curr') curr> property.
 %
@@ -130,7 +132,7 @@ disp(['child.curr= ',num2str(child.curr)])
 %
 %   gauss = currentGaussian( x, y, c, sigma );
 %
-% The current distribution is given by
+% The current distribution (which is not normalized) is given by
 %
 % $$j(\vec{x}) = c\exp{\frac{-(\vec{x}-\vec{x}_0)^2}{2\sigma^2}}$$
 %
@@ -210,5 +212,53 @@ disp(child.Parent)
 % Try changing child's current. It behaves independently now.
 child.curr = 10;
 disp(['After update: ',num2str(child.curr)])
+
+%% Handle assignement, equality and copy
+% As aforementioned, current objects behave as handles, which behaves
+% fundamentally differently from value classes. For a value class, the
+% assignement operator |=| will create a copy of the right-hand side object
+% into the left-hand side one.
+
+value  = 123;
+value2 = value;
+
+%%
+% Modifying the value2 variable will not affect value, and vice-versa.
+value = 0;
+value2
+
+%%
+% When comparing then, using |==|, their internal "properties" are
+% compared, and if they match one-to-one, true is returned.
+if value == value2
+   disp('value equals value2.')
+else
+    disp('value and value2 are different.')
+end
+
+%%
+% However, for handle classes, replicating (in some way) the above code
+% won't produce the same results. If we copy the handle child into a new
+% handle and modify one's properties, the other is other affected.
+child2 = child;
+child.curr = 2;
+child2.curr
+
+%%
+% Moreover, a handle which was assigned equal to another using the
+% |=| will always remain equal, no matter how the handle's properties are
+% changed.
+if child == child2
+   disp('child equals child2.')
+else
+    disp('child and child2 are different.')
+end
+
+%%
+% It is recommended you go through MATLAB(R)'s
+% <matlab:web(fullfile(docroot,'matlab/matlab_oop/comparing-handle-and-value-classes.html'))
+% handle and value classes comparison> to learn more. You can also learn
+% how to copy current objects, and how these copies behave, in
+% <configCopy.html another example>.
 
 displayEndOfDemoMessage(mfilename)

@@ -94,7 +94,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         end
         
         function set.R(obj,R)
-            validateattributes(R,{'double','sym'},{'scalar','positive'})
+            if isnumeric(R)
+                validateattributes(R,{'double'},{'scalar','positive'})
+            else
+                validateattributes(R,{'sym'},{'scalar'})
+                assume(R>0);
+            end
             obj.R = R;
         end
         
@@ -115,14 +120,10 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         'in the input currents array.'],icur);
                 end
             end
-            assert(sum([curs(:).isPlasma])==1,'MACODE:mConf:numPlasma',...
-                'Expected exactly one plasma current.')
-            assert(curs([curs.isPlasma]).curr>0,'MACODE:mConf:negPlasmaCurrent',...
-                'The plasma current is required to be positive.')
             obj.currents = curs;
         end
         
-        function state = checkCommit(obj)
+        function [state,reason,msgid] = checkCommit(obj)
             % CHECKCOMMIT Checks if mConf.commit can be called
             %   s = CHECKCOMMIT(obj) checks if a magnetic configuration can
             %   be committed, and, in the subsequent case, if a commit is
@@ -133,9 +134,26 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % By default, forbid commit
             state = commitState.NotAvail;
+            reason = [];
+            msgid  = [];
             % Check no symbolic expressions are found
             xr = num2cell(rand(1,2));
             if isa(obj.magFieldX(xr{:}),'sym') || isa(obj.magFieldY(xr{:}),'sym') || isa(obj.fluxFx(xr{:}),'sym')
+                msgid  = 'MACODE:mConf:commitSym';
+                reason = ['Magnetic structure depends on symbolic variables. ',...
+                    'You cannot commit such a configuration.'];
+                return;
+            end
+            % Check if exactly on plasma current is set, and its sign is
+            % positive
+            curs = obj.currents;
+            if sum([curs(:).isPlasma])~=1
+                reason = 'Expected exactly one plasma current.';
+                msgid  = 'MACODE:mConf:numPlasma';
+                return;
+            elseif curs([curs(:).isPlasma]).curr<=0
+                reason = 'The plasma current is required to be positive.';
+                msgid = 'MACODE:mConf:negPlasmaCurrent';
                 return;
             end
             % Check if previous commit was done
@@ -144,6 +162,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             if( ~isempty(obj.old_bx) && ~isempty(obj.old_by) )
                 if( isequal(obj.old_bx,symBx) && isequal(obj.old_by,symBy) )
                     state = commitState.Done;
+                    msgid = 'MACODE:mConf:commitExists';
+                    reason = 'Magnetic structure unchanged since last commit.';
                     return;
                 end
             end
@@ -209,26 +229,45 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             % Commit configuration as it is loaded and compute stuff
             symBx = obj.symMagFieldX;
             symBy = obj.symMagFieldY;
-            state = obj.checkCommit;
+            [state,reason,msgid] = obj.checkCommit;
             if state == commitState.Done && ~p.Results.Force
-                warning('MACODE:mConf:commitExists',...
-                    ['Magnetic structure unchanged since last commit. ',...
-                    'You can force the commit with ''Force'' set to true.'])
+                warning(msgid, [reason,'\nYou can force the commit with ''Force'' set to true.'])
                 return;
             elseif state == commitState.NotAvail
-                error('MACODE:mConf:commitSym',...
-                    ['Magnetic structure depends on symbolic variables. ',...
-                    'You cannot commit such a configuration.'])
+                error(msgid,reason)
             end
-            obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
-            % Psi Separatrix and LCFS
-            obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
-                obj.xpoints(:,2));
-            obj.lcfsDetec(p.Results.OffsetScale);
-            % Find core location
-            obj.coreDetec;
-            % Compute geometrical properties
-            obj.computeMagR(p.Results.OffsetScale);
+            % Attempt to commit and catch errors
+            try
+                % X-Point detection
+                obj.xPointDetec(p.Results.nxpt, p.Results.ntri, p.Results.Limits);
+                % Psi Separatrix and LCFS
+                obj.separatrixPsi = obj.fluxFx(obj.xpoints(:,1),...
+                    obj.xpoints(:,2));
+                obj.lcfsDetec(p.Results.OffsetScale);
+                % Find core location
+                obj.coreDetec;
+                % Compute geometrical properties
+                obj.computeMagR(p.Results.OffsetScale);
+            catch ME
+                % Caught an error, must terminate commit
+                % If error is recognized, add a suggestion on how to solve
+                % the issue where possible.
+                errMsg = 'Commit was aborted (see cause).';
+                if strcmp(ME.identifier,'MACODE:mConf:noSeparatrix')
+                    errMsg = [errMsg,...
+                        '\nSuggested Action: Check simArea and commit again with more tries.'];
+                elseif strcmp(ME.identifier,'MACODE:mConf:noContourLCFS')
+                    errMsg = [errMsg,...
+                        '\nSuggested Action: Check simArea. ',...
+                        'If repeated commits fail, try to adjust OffsetScale.'];
+                elseif strcmp(ME.identifier,'MACODE:mConf:manyLCFS')
+                    errMsg = [errMsg,'\nSuggested Action: ',...
+                        'Crop the considered domain using simArea.'];
+                end
+                commitME = MException('MACODE:mConf:failCommit',errMsg);
+                commitME = addCause(commitME,ME);
+                throw(commitME);
+            end
             % Remember last commit's magnetic structure
             obj.old_bx  = symBx;
             obj.old_by  = symBy;
@@ -387,8 +426,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function p = get.psi95(obj)
             assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
-                'Could not find separatrix. Were x-points correctly detected?\n',...
-                'Suggested action: Commit the configuration again.');
+                'Could not find separatrix. Were x-points correctly detected?');
             assert(~isempty(obj.corePosition),'MACODE:mConf:noMagneticAxis',...
                 'Could not find magnetic axis. Was the center correctly detected?',...
                 'Suggested action: Commit the configuration again.');
@@ -414,7 +452,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         
         function a = get.a(obj)
             assert(~isempty(obj.magR),'MACODE:mConf:noMagR',...
-                ['Could not find configuration''s radiuses. Did the last commit finish successfully?\n',...
+                ['Could not find configuration''s radiuses. Was the LCFS detected?\n',...
                 'Suggested action: Commit the configuration again.']);
             a = (obj.magR.Rmax - obj.magR.Rmin)/2;
         end
@@ -438,8 +476,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             
             % Get target psi's, but need a psi offset which we compute
             assert(~isempty(obj.separatrixPsi),'MACODE:mConf:noSeparatrix',...
-                'Could not find separatrix. Were x-points correctly detected?\n',...
-                'Suggested action: Commit the configuration again.');
+                'Could not find separatrix. Were x-points correctly detected?');
             baseScale = 5e-5 * offsetScale; % Arbitrary shift to select contour
             Points(1) = 100; % # of sample points on grid
             w = obj.simArea(3)-obj.simArea(1);
@@ -449,7 +486,11 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             Points = Points(I);
             [X,Y] = meshgrid(linspace(obj.simArea(1),obj.simArea(3),Points(1)),...
                 linspace(obj.simArea(2),obj.simArea(4),Points(2)));
-            psiOffset = baseScale * range(obj.fluxFx(X(:),Y(:)));
+            allFlux = obj.fluxFx(X(:),Y(:));
+            rangeFluxFx(1) = min(allFlux);
+            rangeFluxFx(2) = max(allFlux);
+            rangeFluxFx = diff(rangeFluxFx);
+            psiOffset = baseScale * rangeFluxFx;
             targetPsi = obj.separatrixPsiTol - psiOffset;
             if numel(targetPsi)==1
                 % Else, contourc will returns targetPsi different contours!
@@ -466,8 +507,7 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             S = extract_contourc(C);
             S = removeOpenContours(S);
             assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
-                ['Detection of a LCFS surface contour failed.\n',...
-                'Suggested action: Adjust offsetScale, or commit again.']);
+                'Detection of a LCFS surface contour failed.');
             % Maximum available value of Psi must be LCFS
             obj.lcfsPsi = max(S.level)+psiOffset;
         end
@@ -475,13 +515,16 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
         function computeMagR(obj,offsetScale)
             % Finds a contour close to the LCFS and gathers
             % R_max,min,upper,lower,geo and a.
-            assert(~isempty(obj.lcfsPsi),'MACODE:mConf:noLCFS',...
-                'Could not find LCFS. Did it''s detection complete successfully?\n',...
-                'Suggested action: Commit the configuration again.');
+            assert(~isempty(obj.lcfsPsi),'MACODE:unexpected',...
+                'Unexpected Behavior: Could not find LCFS.\n',...
+                'Previously called method from mConf/commit should have thrown.');
             % Compute psi offset
             baseScale = 5e-5 * offsetScale;
-            psiOffset = baseScale * range([obj.lcfsPsi,...
-                obj.fluxFx(obj.corePosition(1),obj.corePosition(2))]);
+            allFlux = [obj.lcfsPsi, obj.fluxFx(obj.corePosition(1),obj.corePosition(2))];
+            rangeFluxFx(1) = min(allFlux);
+            rangeFluxFx(2) = max(allFlux);
+            rangeFluxFx = diff(rangeFluxFx);
+            psiOffset = baseScale * rangeFluxFx;
             targetPsi = repmat(obj.lcfsPsi-psiOffset,1,2);
             contour_resolution = 0.75;
             Lx = obj.simArea(1,2) - obj.simArea(1,1);
@@ -492,9 +535,12 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             C = contourc(cx,cy,obj.fluxFx(CX,CY),targetPsi);
             S = extract_contourc(C);
             S = removeOpenContours(S);
-            assert(~isempty(S),'MACODE:mConf:noContourLCFS',...
-                ['Detection of a LCFS surface contour failed.\n',...
-                'Suggested action: Adjust offsetScale, or commit again.']);
+            assert(~isempty(S),'MACODE:unexpected',...
+                ['Unexpected Behavior: Detection of a LCFS surface contour failed.\n',...
+                'This is likely caused by non-consistent behavior of contourc.']);
+            % NOTE - Following check is required since lcfsDetec could not
+            % reason about the core, and might have exited with 2+ closed
+            % contours that were detected
             if(numel(S)>1)
                 % Multiple closed contours, find one enclosing core
                 corein = false(1,numel(S));
@@ -506,9 +552,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                 % TODO - Could compute which enclosing surface has a
                 % point closest to the magnetic axis...
                 assert(numel(S)==1,'MACODE:mConf:manyLCFS',...
-                    ['Many LCFS level contours enclosing the magnetic axis were found.\n',...
-                    'This is likely due to your simulation area being too large.',...
-                    'Suggested action: Crop domain and commit again.']);
+                    ['Many LCFS level contours enclosing the magnetic center were found.\n',...
+                    'This is likely due to your simulation area being too large.']);
             end
             xmax = max(S.x); [~,iymax] = max(S.y);
             xmin = min(S.x); [~,iymin] = min(S.y);
@@ -545,8 +590,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
                         pts(i,:) = NaN;
                     end
                 elseif numel(sol.x)>1
-                    error('MACODE:mConf:multiVPASolve',...
-                        'Unexpected behavior: Two null points were returned by vpasolve.')
+                    error('MACODE:unexpected',...
+                        'Unexpected Behavior: Two null points were returned by vpasolve.')
                 else
                     % If no solutions, fill with NaN
                     pts(i,:) = NaN;
@@ -572,8 +617,8 @@ classdef mConf < matlab.mixin.SetGet & matlab.mixin.Copyable
             bx = obj.symMagFieldX;
             by = obj.symMagFieldY;
             sol = vpasolve([bx==0,by==0],[x,y],[plasma.x, plasma.y]+rand(1,2));
-            assert(numel(sol.x)==1,'MACODE:mConf:multiVPASolve',...
-                'Unexpected behavior: Two null points were returned by vpasolve.')
+            assert(numel(sol.x)==1,'MACODE:unexpected',...
+                'Unexpected Behavior: Two null points were returned by vpasolve.')
             obj.corePosition = double([sol.x,sol.y]);
         end
         

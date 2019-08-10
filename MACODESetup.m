@@ -1,9 +1,12 @@
-function NegTriSetup(varargin)
-% NEGTRISETUP Sets up the negative triangularity project
-%   NEGTRISETUP makes sure required scripts and paths are added to MATLAB's
-%   userpath, builds the documentation if required, and does other things.
+function MACODESetup(varargin)
+% MACODESetup Sets up the MACODE project
+%   MACODESetup makes sure required scripts and paths are added to MATLAB's
+%   userpath.
+%
+%   MACODESetup('MakeDocs',true) also generates documentation for the
+%   toolbox.
 
-% TODO - Add other things that NEGTRISETUP might do!
+% TODO - Add other things that MACODESetup might do!
 
 %% Parse varargin
 % Defaults
@@ -41,13 +44,18 @@ waitfor(...
     'Please wait until all figures figures are closed.'},...
     'Documentation')...
     );
+drawnow;
 
-if ~exist([script_path,filesep,'docs'],'dir')
-    mkdir([script_path,filesep,'docs'])
+docs_path = [script_path,filesep,'docs'];
+if ~exist(docs_path,'dir')
+    error('MACODE:nonExistentFolder','Documentation folder seems to be missing.')
+end
+if ~exist([docs_path,filesep,'m2html'],'dir')
+    mkdir([docs_path,filesep,'m2html'])
 end
 
 m2html('mfiles','src','ignoredDir','m2html',...
-    'htmldir','docs', 'recursive','on', 'global','on',...
+    'htmldir','docs/m2html', 'recursive','on', 'global','on',...
     'graph','on','globalHypertextLinks','on','verbose','off');
 
 examples_path = [script_path,filesep,'examples'];
@@ -61,6 +69,18 @@ publish([examples_path,filesep,'configDivertor.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'doubleXPoint.m']  ,'outputDir',demos_path);
 publish([examples_path,filesep,'symbolicConfig.m'],'outputDir',demos_path);
 publish([examples_path,filesep,'configCopy.m'],'outputDir',demos_path);
+% Special option to capture full window figures
+publishoptions = struct('format','html','outputDir',demos_path,...
+    'figureSnapMethod','entireFigureWindow');
+publish([examples_path,filesep,'parameterScan.m'],publishoptions);
+
+% Publish startpage
+png_path = [demos_path,filesep,'configDivertor_02.png'];
+if exist(png_path,'file')
+    cp_path = [docs_path,filesep,'startImg.png'];
+    copyfile(png_path,cp_path);
+end
+publish([examples_path,filesep,'startPage.m'],'outputDir',docs_path);
 
 % Cleanup
 close all

@@ -110,7 +110,10 @@ lwS = ones(size(X));
 arrowColor = repmat(Color,[numel(X),1]);
 if any(cellfun(@(x)strcmp(x,'Color'),Style))
     cm = colormap;
-    colidx = round((normUV-min(normUV(:)))/range(normUV(:))...
+    rangeUV(1) = min(normUV(:));
+    rangeUV(2) = max(normUV(:));
+    rangeUV = diff(rangeUV);
+    colidx = round((normUV-min(normUV(:)))/rangeUV...
         * (length(cm(:,1))-1)) + 1;
     arrowColor = cm(colidx,:);
 end

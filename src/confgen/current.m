@@ -1,5 +1,5 @@
 classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mixin.Copyable
-    % CURRENT   Object describing an electrical current
+    % CURRENT   Class describing an electrical current
     %   This abstract superclass constitutes the base class for one dimensional
     %   current objects. Such objects must be described by (at least) a
     %   position in two dimensional space, and an electrical current value.

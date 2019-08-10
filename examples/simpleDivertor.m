@@ -15,7 +15,7 @@
 %
 % The plasma current is first initialized, and its handle is then passed to
 % the filament current so that the two become dependent. For more detailed
-% explanations, the reader might want to refer to the <matlab:web('TODO') currents>
+% explanations, the reader might want to refer to the <currents.html currents>
 % reference page.
 
 x = linspace(-50,50,100);
@@ -29,13 +29,12 @@ divertor = currentWire(0,-10,0.5,plasma); % Divertor current depends on plasma
 %% Aggregate Field Expressions
 % Each of the defined current holds three function handles: the two
 % components of the magnetic field they generate, and the associated
-% poloidal magnetic flux function, often refered to as $\psi$.
-% To get an overview of the configuration, we regroup build function
-% handles that are the sum of these properties for both currents.
-% We also build a handle returning the intensity of the magnetic field.
-% Note that the handle computing the flux function requires a major radius
-% as input parameter, such that currents themselves are independent of this
-% geometrical parameter.
+% poloidal magnetic flux function, often refered to as $\psi$. To get an
+% overview of the configuration, we build function handles that are the sum
+% of these properties for both currents. We also build a handle returning
+% the intensity of the magnetic field. Note that the handle computing the
+% flux function requires a major radius as input parameter, such that
+% currents themselves are independent of this geometrical parameter.
 
 % Components of the total magnetic field
 bx = @(x,y) plasma.magFieldX(x,y) + divertor.magFieldX(x,y);
@@ -75,8 +74,8 @@ axis image
 % generated easily. However, one might be interested in computing specific
 % properties of such a configuration (for example, x-point locations,
 % triangularity, and so on), which isn't a functionality that is easily
-% provided by limiting ouselves to the use of currents.
-% In the next demonstration, we introduce a magnetic configuration class,
-% mConf, which provides such basic functionalities.
+% provided by limiting ouselves to the use of currents. In the
+% <configDivertor.html next demonstration>, we introduce a magnetic
+% configuration class, |mConf|, which provides such basic functionalities.
 
 displayEndOfDemoMessage(mfilename)

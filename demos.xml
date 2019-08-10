@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><demos>
+    <name>Magnetic Configuration</name>
+    <type>toolbox</type>
+    <icon>HelpIcon.DEMOS</icon>
+    <description>These examples will guide you through the main features of the toolbox.</description>
+    <website><a href="matlab:web('mailto:louis.stenger@epfl.ch')">Get help via email (Premium subscribers only)</a></website>
+    
+    <demosection>
+        <label>Getting Started</label>
+        <demoitem>
+            <label>Create sample currents</label>
+            <type>M-file</type>
+            <file>demos/currents.html</file>
+            <source>currents</source>
+        </demoitem>
+        <demoitem>
+            <label>Working with Multiple Currents</label>
+            <type>M-file</type>
+            <file>demos/simpleDivertor.html</file>
+            <source>simpleDivertor</source>
+        </demoitem>
+        <demoitem>
+            <label>Create a Magnetic Configuration Object</label>
+            <type>M-file</type>
+            <file>demos/configDivertor.html</file>
+            <source>configDivertor</source>
+        </demoitem>
+        <demoitem>
+            <label>Magnetic Configuration with Many X-Points</label>
+            <type>M-file</type>
+            <file>demos/doubleXPoint.html</file>
+            <source>doubleXPoint</source>
+        </demoitem>
+    </demosection>
+    
+    <demosection>
+        <label>Going Further</label>
+        <demoitem>
+            <label>Copying Currents and Configurations</label>
+            <type>M-file</type>
+            <file>demos/configCopy.html</file>
+            <source>configCopy</source>
+        </demoitem>
+        <demoitem>
+            <label>Work on Magnetic Configurations with Symbolic Variables</label>
+            <type>M-file</type>
+            <file>demos/symbolicConfig.html</file>
+            <source>symbolicConfig</source>
+        </demoitem>
+        <demoitem>
+            <label>Creating Parameter Scans Over Magnetic Configurations</label>
+            <type>M-file</type>
+            <file>demos/parameterScan.html</file>
+            <source>parameterScan</source>
+        </demoitem>
+    </demosection>
+
+</demos>
