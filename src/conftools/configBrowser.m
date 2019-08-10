@@ -1,15 +1,15 @@
 function varargout = configBrowser(obj,varargin)
 % CONFIGBROWSER Generate Interpolated Magnetic Configurations
-%   CONFIGBROWSER(confArray) processes an input mConf array,
-%   containing at least two elements, as magnetic configurations sampled
-%   uniformly on an arbitrary one-dimensional parameter space. This
-%   parameter space is described by the variable 'p', ranging from -1 to 1.
-%   Two windows will be open and allow to browse the parameter space. The
+%   CONFIGBROWSER(confArray) processes an input mConf array, containing at
+%   least two elements, as magnetic configurations sampled uniformly on an
+%   arbitrary one-dimensional parameter space. This parameter space is
+%   described by the variable 'p' (or 'scanp'), ranging from -1 to 1. Two
+%   windows will be open and allow to browse the parameter space. The
 %   interpolation between configurations is linear.
 %
 %   Note the input sample configuration array will be destroyed to avoid
 %   confusion with the output variables. This behavior may be modified, see
-%   below
+%   below.
 %
 %   config = CONFIGBROWSER(confArray) allows querying the displayed
 %   configuration using the returned handle, config.
@@ -21,19 +21,25 @@ function varargout = configBrowser(obj,varargin)
 %   parameter space (and not -1 and 1).
 %
 %   CONFIGBROWSER(confArray,p,r) sets the number of solving attempts to
-%   find configuration x-points on each commit. A low value may lead to
+%   find configuration x-points at each commit. A low value may lead to
 %   failing commits when updating the configuration.
 %
 %   CONFIGBROWSER(...,'DeleteSamples',false) retains the input
 %   configurations in memory. Note, however, that these configurations are
 %   not modified by the user's interaction with the GUI.
 %
-%   Note: Sample configurations must be passed with currents in the same
-%   indexed order. If you shuffle currents together between sample
-%   configurations, coils will be moved around the physical space during
-%   interpolation.
+%   CONFIGBROWSER(...,'CommitParams',params) allows more control over how
+%   commits will be performed. params is a cell array containing arguments
+%   with which mConf/commit will be called. These parameters have
+%   precedence over the p and r arguments. It is not recommended to modify
+%   the 'Force' parameter.
 %
-%   See also MCONF
+%   Note that this method allows currents to be moved around. If you
+%   shuffle currents together between sample configurations (in the mConf's
+%   current array), but expect fixed currents in space, coils will instead
+%   be moving around the physical space during interpolation.
+%
+%   See also MCONF, MCONF/COMMIT
 
 nargoutchk(0,1)
 

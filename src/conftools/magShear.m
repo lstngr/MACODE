@@ -1,13 +1,13 @@
 function varargout = magShear(obj,npts,target,varargin)
 % MAGSHEAR Computes a magnetic configuration's magnetic shear
-%   s = MAGSHEAR(obj,n,x) computes the local magnetic shear for a
+%   s = MAGSHEAR(obj,npts,target) computes the local magnetic shear for a
 %   magnetic configuration object (mConf) along a straight path extending
-%   from the configuratin's center to the point described by coordinates in
-%   x. npts indicates how many points are sampled. By default, the most
-%   inner point is skipped to avoid numerical errors (this behavior can be
-%   modified, see 'SkipFirst' below).
+%   from the configuration's center to the point described by coordinates
+%   in target. npts indicates how many points are sampled. By default, the
+%   most inner point is skipped to avoid numerical errors (this behavior
+%   can be modified, see 'SkipFirst' below).
 %
-%   [s,p] = MAGSHEAR(obj,n,x) does the same as above, but returns the
+%   [s,p] = MAGSHEAR(obj,npts,target) does the same as above, but returns the
 %   locations at which the magnetic shear is sampled in units of the flux
 %   function. By default, the distance is normalized to the variable rho
 %   (this behavior can be modified, see 'Normalize' and 'Units' below).
@@ -36,7 +36,8 @@ function varargout = magShear(obj,npts,target,varargin)
 %   See also MCONF
 
 % Check if commit was done
-assert(obj.checkCommit==commitState.Done)
+assert(obj.checkCommit==commitState.Done,'MACODE:mConf:commitMissing',...
+    'Expected a committed configuration to be passed.')
 % Parser defaults
 defaultNormalize = true;
 defaultSkipFirst = true;
@@ -44,10 +45,14 @@ allowedUnits = {'psi','dist'};
 defaultUnits = allowedUnits{1};
 % Input parser setup
 p = inputParser;
-addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'}))
-addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2}))
-addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'}))
-addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'}))
+addRequired(p,'npts',@(x)validateattributes(x,{'numeric'},{'integer','positive','scalar'},...
+    'magShear','npts',1))
+addRequired(p,'target',@(x)validateattributes(x,{'numeric'},{'row','numel',2},...
+    'magShear','target',2))
+addParameter(p,'Normalize',defaultNormalize,@(x)validateattributes(x,{'logical'},{'scalar'},...
+    'magShear','Normalize'))
+addParameter(p,'SkipFirst',defaultSkipFirst,@(x)validateattributes(x,{'logical'},{'scalar'},...
+    'magShear','SkipFirst'))
 addParameter(p,'Units',defaultUnits,@ischar)
 % Parse arguments
 parse(p,npts,target,varargin{:})
@@ -56,7 +61,7 @@ targ = p.Results.target;
 nrmd = p.Results.Normalize;
 skpf = p.Results.SkipFirst;
 % Validate remaining arguments
-validUnits = validatestring(p.Results.Units,allowedUnits);
+validUnits = validatestring(p.Results.Units,allowedUnits,'magShear','Units');
 % Add a point if first one skipped
 if skpf
     npts = npts + 1;

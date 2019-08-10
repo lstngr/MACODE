@@ -1,6 +1,6 @@
 function S = extract_contourc(C)
 % EXTRACT_CONTOURC  Store contours in a structure array
-%   S=EXTRACT_CONTOURC(C) processes a 2 rows matrix, C, output by MATLAB's
+%   S = EXTRACT_CONTOURC(C) processes a 2 rows matrix, C, output by MATLAB's
 %   contourc function into a structure array. These structures have fields
 %   'level','x' and 'y'. The contours and their points are ordered in the
 %   same manner as in C.
@@ -10,7 +10,7 @@ function S = extract_contourc(C)
 if(isempty(C))
     return;
 end
-assert(size(C,1)==2, 'Expected CONTOURC object.')
+assert(size(C,1)==2,'mConf:wrongdim','Expected CONTOURC object.')
 
 levels = {}; xs = {}; ys = {};
 

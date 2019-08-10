@@ -10,7 +10,7 @@ classdef currentWire < current
             %   electrical current filament at cartesian coordinates (x,y)
             %   with current intensity c and returns a handle h to the
             %   created current.
-            %
+            %h
             %   h = CURRENTWIRE(...,p) uses the current handle p as a
             %   parent current for h.
             obj@current(x,y,c,varargin{:});

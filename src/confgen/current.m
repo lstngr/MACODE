@@ -32,7 +32,7 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
         curr
     end
     
-    properties(Access=protected)
+    properties(Access=private)
         % C - Low-level current
         % If the Parent property is empty, C is the value of the electrical
         % current. If Parent is set, C act as a multiplicative factor to
@@ -154,7 +154,7 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
         
         function f = symMagFieldX(obj)
             % SYMMAGFIELDX Symbolic expression of the magnetic field
-            %   fx = SYMMSGFIELDX(obj) returns a symbolic expression of the
+            %   fx = SYMMAGFIELDX(obj) returns a symbolic expression of the
             %   x-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
             sx = sym('x','real');
@@ -164,7 +164,7 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
         
         function f = symMagFieldY(obj)
             % SYMMAGFIELDY Symbolic expression of the magnetic field
-            %   fy = SYMMSGFIELDY(obj) returns a symbolic expression of the
+            %   fy = SYMMAGFIELDY(obj) returns a symbolic expression of the
             %   y-component of the magnetic field for mConf handle obj,
             %   with symbolic variables x and y.
             sx = sym('x','real');
@@ -223,6 +223,25 @@ classdef current < matlab.mixin.SetGet & matlab.mixin.Heterogeneous & matlab.mix
     
     methods( Access = protected, Sealed )
         function cp = copyElement(obj)
+            % COPYELEMENT Deep copy of a current object
+            %   cp = COPYELEMENT(obj) returns a copied current object. This
+            %   method is called by the class' copy method.
+            %
+            %   COPYELEMENT ensures the following rules are fullfilled when
+            %   copying a current:
+            %       - If the current is independent (no parent or
+            %       children), the copy method behaves in the same way as
+            %       the matlab.mixin.Copyable superclass' implementation.
+            %       - If the current has a parent, this parent is not
+            %       copied. However, its children array is updated with the
+            %       returned current, cp.
+            %       - If the current holds children, those will also be
+            %       copied recursively.
+            %       - In each case, the parent-children relationships are
+            %       updated accordingly.
+            %
+            %   See also CURRENT/COPY
+            
             % NOTE - Copy method is sealed since we just want to have deep
             % copy for parent-children relationships. All other properties
             % should be shallow copied.
