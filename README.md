@@ -50,4 +50,7 @@ The Git repository is organised as follows:
 Negative trianguarity configurations are located on the _work_ branch. The
 scripts there are decently commented to be understandable. If you have trouble
 understanding them, I recommend checking out the toolbox's documentation.
-  
+
+By checking out to the _work_ branch, an additional folder, named `work`, should
+appear. This folder will not be in your path by default, it contains additional
+configurations. Note a README is also available there which describes them.
